@@ -1,0 +1,17 @@
+# OS bestanden
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor mappen
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Tijdelijke bestanden
+*.tmp
+*.bak
