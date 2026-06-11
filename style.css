@@ -1,0 +1,431 @@
+/* ═══════════════════════════════════════════════════════════════
+   Catava Air Torensimulator v3 — Stylesheet
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --green:     #1D9E75;
+  --green-dk:  #085041;
+  --green-lt:  #E1F5EE;
+  --green-pal: #f0faf5;
+  --amber:     #BA7517;
+  --amber-lt:  #FAEEDA;
+  --blue:      #185FA5;
+  --blue-lt:   #E6F1FB;
+  --red:       #A32D2D;
+  --red-lt:    #FCEBEB;
+  --gray-900:  #1a1a18;
+  --gray-700:  #3a3a37;
+  --gray-500:  #6b6b67;
+  --gray-300:  #d0cec4;
+  --gray-100:  #f2f0ea;
+  --white:     #ffffff;
+  --r:         8px;
+  --r-lg:      13px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--gray-900);
+  border-bottom: 2px solid var(--green);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.hdr {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: .6rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.logo-name {
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.logo-sub {
+  color: var(--green);
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.nb {
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  font-size: .75rem;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255,255,255,.55);
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.nb:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+.nb.act {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+/* ── MAIN LAYOUT ── */
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.tp { display: none; }
+.tp.act { display: block; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: .65rem;
+  margin-top: .5rem;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.card h2 {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--gray-500);
+  margin-bottom: .75rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.stitle {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--gray-500);
+  margin-bottom: .6rem;
+}
+
+/* ── METRIC CARDS ── */
+.mc {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r);
+  padding: .65rem .8rem;
+}
+
+.mc.hi  { background: var(--blue-lt);  border-color: #b5d4f4; }
+.mc.ok  { background: var(--green-lt); border-color: #9FE1CB; }
+.mc.wn  { background: var(--amber-lt); border-color: #FAC775; }
+.mc.er  { background: var(--red-lt);   border-color: #f7c1c1; }
+
+.mc-lbl { font-size: .68rem; color: var(--gray-500); margin-bottom: 2px; }
+.mc-val { font-size: 1.15rem; font-weight: 700; color: var(--gray-900); }
+.mc-uni { font-size: .65rem; color: var(--gray-500); margin-top: 1px; }
+
+.mc.hi .mc-lbl, .mc.hi .mc-val, .mc.hi .mc-uni { color: var(--blue); }
+.mc.ok .mc-lbl, .mc.ok .mc-val, .mc.ok .mc-uni { color: var(--green-dk); }
+.mc.wn .mc-lbl, .mc.wn .mc-val, .mc.wn .mc-uni { color: var(--amber); }
+.mc.er .mc-lbl, .mc.er .mc-val, .mc.er .mc-uni { color: var(--red); }
+
+/* ── SLIDERS ── */
+.sg {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.sr {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sr label {
+  font-size: .75rem;
+  color: var(--gray-700);
+  min-width: 170px;
+  flex-shrink: 0;
+}
+
+.sr input[type=range] {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.sv {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  min-width: 68px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── NUMBER INPUTS (geometry) ── */
+.ni-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: .5rem;
+}
+
+.ni-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ni-wrap label {
+  font-size: .68rem;
+  color: var(--gray-500);
+}
+
+.ni-wrap input[type=number] {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  background: var(--white);
+}
+
+.ni-wrap input[type=number]:focus {
+  outline: 2px solid var(--green);
+  border-color: var(--green);
+}
+
+.ni-unit {
+  font-size: .65rem;
+  color: var(--gray-500);
+  text-align: right;
+}
+
+/* ── FORMULA BOX ── */
+.fbox {
+  background: var(--gray-900);
+  border-radius: var(--r);
+  padding: .75rem 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: .75rem;
+  color: rgba(255,255,255,.6);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.fbox .fv {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* ── SPACING CONTROL ── */
+.spacing-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: .75rem;
+}
+
+.spacing-ctrl label {
+  font-size: .78rem;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+.spacing-ctrl input[type=range] {
+  flex: 1;
+  accent-color: var(--green);
+}
+
+/* ── CANVAS WRAP ── */
+.cw {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r-lg);
+  padding: .75rem;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+canvas { display: block; }
+
+/* ── LEVEL CARDS ── */
+.lc {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r);
+  padding: .65rem .9rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .5rem;
+}
+
+.lc.lca {
+  border-color: var(--green);
+  background: var(--green-lt);
+}
+
+.lc-name { font-size: .78rem; font-weight: 700; }
+.lc-det  { font-size: .68rem; color: var(--gray-500); }
+
+.lbdg {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--gray-900);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.lc.lca .lbdg { background: var(--green); }
+
+/* ── VD TABLE ── */
+.vdt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .72rem;
+}
+
+.vdt th {
+  background: var(--gray-900);
+  color: rgba(255,255,255,.6);
+  padding: 5px 7px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.vdt td {
+  padding: 5px 6px;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,.5);
+}
+
+.vd-ok { background: #e1f5ee; color: #085041; }
+.vd-gd { background: #c0dd97; color: #27500a; }
+.vd-wn { background: #faeeda; color: #854f0b; }
+.vd-bd { background: #fac775; color: #633806; }
+.vd-xx { background: #f7c1c1; color: #791f1f; }
+
+/* ── VD LEGENDA ── */
+.vd-legenda {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vd-leg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .72rem;
+  color: var(--gray-700);
+}
+
+.vd-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ── PROSE ── */
+.prose {
+  font-size: .78rem;
+  color: var(--gray-700);
+  line-height: 1.75;
+  margin-top: .25rem;
+}
+
+.prose strong { color: var(--gray-900); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--gray-300);
+  background: var(--white);
+  margin-top: 1.5rem;
+}
+
+.ftr {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: .6rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: .68rem;
+  color: var(--gray-500);
+  flex-wrap: wrap;
+  gap: .3rem;
+}
