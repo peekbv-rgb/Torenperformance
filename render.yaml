@@ -2,10 +2,6 @@ services:
   - type: web
     name: catava-simulator
     runtime: static
+    staticPublishPath: .
     buildCommand: ""
-    staticPublishPath: ./
     pullRequestPreviewsEnabled: false
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: no-cache
