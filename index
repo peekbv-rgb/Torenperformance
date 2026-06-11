@@ -1,1185 +1,230 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catava Air — Dynamisch Torensimulator v3</title>
-<style>
-:root {
-  --green:      #1D9E75;
-  --green-dk:   #085041;
-  --green-lt:   #E1F5EE;
-  --green-pal:  #f0faf5;
-  --amber:      #BA7517;
-  --amber-lt:   #FAEEDA;
-  --blue:       #185FA5;
-  --blue-lt:    #E6F1FB;
-  --red:        #A32D2D;
-  --red-lt:     #FCEBEB;
-  --gray-900:   #1a1a18;
-  --gray-700:   #3a3a37;
-  --gray-500:   #6b6b67;
-  --gray-300:   #d0cec4;
-  --gray-100:   #f2f0ea;
-  --white:      #ffffff;
-  --r:          8px;
-  --r-lg:       13px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-100);color:var(--gray-900);font-size:14px;line-height:1.5}
-
-/* HEADER */
-header{background:var(--gray-900);border-bottom:2px solid var(--green);position:sticky;top:0;z-index:200}
-.hdr{max-width:1400px;margin:0 auto;padding:.6rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:.6rem}
-.logo-name{color:#fff;font-size:.95rem;font-weight:700;letter-spacing:.02em}
-.logo-sub{color:var(--green);font-size:.65rem;text-transform:uppercase;letter-spacing:.07em}
-nav{display:flex;gap:3px;flex-wrap:wrap}
-.nb{padding:4px 12px;border:1px solid rgba(255,255,255,.15);border-radius:20px;font-size:.75rem;cursor:pointer;background:transparent;color:rgba(255,255,255,.55);transition:all .15s}
-.nb:hover{background:rgba(255,255,255,.08);color:#fff}
-.nb.act{background:var(--green);border-color:var(--green);color:#fff}
-
-/* LAYOUT */
-main{max-width:1400px;margin:0 auto;padding:1.25rem}
-.tp{display:none}.tp.act{display:block}
-.grid2{display:grid;grid-template-columns:340px 1fr;gap:1.1rem;align-items:start}
-@media(max-width:900px){.grid2{grid-template-columns:1fr}}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
-.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.65rem;margin-top:.5rem}
-.col{display:flex;flex-direction:column;gap:.9rem}
-
-/* CARDS */
-.card{background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r-lg);padding:1rem 1.1rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.card h2{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-500);margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
-
-/* METRIC CARDS */
-.mc{background:var(--gray-100);border:1px solid var(--gray-300);border-radius:var(--r);padding:.65rem .8rem}
-.mc.hi{background:var(--blue-lt);border-color:#b5d4f4}
-.mc.ok{background:var(--green-lt);border-color:#9FE1CB}
-.mc.wn{background:var(--amber-lt);border-color:#FAC775}
-.mc.er{background:var(--red-lt);border-color:#f7c1c1}
-.mc-lbl{font-size:.68rem;color:var(--gray-500);margin-bottom:2px}
-.mc-val{font-size:1.15rem;font-weight:700;color:var(--gray-900)}
-.mc-uni{font-size:.65rem;color:var(--gray-500);margin-top:1px}
-.mc.hi .mc-lbl,.mc.hi .mc-val,.mc.hi .mc-uni{color:var(--blue)}
-.mc.ok .mc-lbl,.mc.ok .mc-val,.mc.ok .mc-uni{color:var(--green-dk)}
-.mc.wn .mc-lbl,.mc.wn .mc-val,.mc.wn .mc-uni{color:var(--amber)}
-.mc.er .mc-lbl,.mc.er .mc-val,.mc.er .mc-uni{color:var(--red)}
-
-/* SECTION TITLE */
-.stitle{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-500);margin-bottom:.6rem}
-
-/* SLIDERS */
-.sg{display:flex;flex-direction:column;gap:.55rem}
-.sr{display:flex;align-items:center;gap:7px}
-.sr label{font-size:.75rem;color:var(--gray-700);min-width:170px;flex-shrink:0}
-.sr input[type=range]{flex:1;height:4px;accent-color:var(--green);cursor:pointer}
-.sv{font-size:.75rem;font-weight:700;color:var(--gray-900);min-width:68px;text-align:right;font-variant-numeric:tabular-nums}
-
-/* NUMBER INPUTS */
-.ni-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:.5rem}
-.ni-wrap{display:flex;flex-direction:column;gap:3px}
-.ni-wrap label{font-size:.68rem;color:var(--gray-500)}
-.ni-wrap input[type=number]{width:100%;padding:5px 8px;border:1px solid var(--gray-300);border-radius:var(--r);font-size:.82rem;font-weight:600;color:var(--gray-900);background:var(--white)}
-.ni-wrap input:focus{outline:2px solid var(--green);border-color:var(--green)}
-.ni-unit{font-size:.65rem;color:var(--gray-500);text-align:right}
-
-/* BADGES */
-.badge{font-size:.62rem;padding:2px 7px;border-radius:20px;font-weight:600}
-.b-green{background:var(--green-lt);color:var(--green-dk)}
-.b-amber{background:var(--amber-lt);color:var(--amber)}
-
-/* FORMULA BOX */
-.fbox{background:var(--gray-900);border-radius:var(--r);padding:.75rem 1rem;font-family:'Courier New',monospace;font-size:.75rem;color:rgba(255,255,255,.6);margin-top:.6rem;line-height:1.9}
-.fbox .fv{color:var(--green);font-weight:700}
-
-/* DIVIDER */
-hr{border:none;border-top:1px solid var(--gray-100);margin:.85rem 0}
-
-/* VD TABLE */
-.vdt{width:100%;border-collapse:collapse;font-size:.72rem}
-.vdt th{background:var(--gray-900);color:rgba(255,255,255,.6);padding:5px 7px;font-weight:500;text-align:center}
-.vdt td{padding:5px 6px;text-align:center;font-weight:600;border:1px solid rgba(255,255,255,.5);border-radius:3px}
-.vd-ok{background:#e1f5ee;color:#085041}
-.vd-gd{background:#c0dd97;color:#27500a}
-.vd-wn{background:#faeeda;color:#854f0b}
-.vd-bd{background:#fac775;color:#633806}
-.vd-xx{background:#f7c1c1;color:#791f1f}
-
-/* CANVAS WRAP */
-.cw{background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r-lg);padding:.75rem;display:flex;justify-content:center;overflow:hidden}
-canvas{display:block}
-
-/* LEVEL CARDS */
-.lc{background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r);padding:.65rem .9rem;display:grid;grid-template-columns:1fr auto;align-items:center;gap:.5rem}
-.lc.lca{border-color:var(--green);background:var(--green-lt)}
-.lc-name{font-size:.78rem;font-weight:700}
-.lc-det{font-size:.68rem;color:var(--gray-500)}
-.lbdg{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--gray-900);color:#fff;white-space:nowrap}
-.lc.lca .lbdg{background:var(--green)}
-
-/* FOOTER */
-footer{border-top:1px solid var(--gray-300);background:var(--white);margin-top:1.5rem}
-.ftr{max-width:1400px;margin:0 auto;padding:.6rem 1.25rem;display:flex;justify-content:space-between;font-size:.68rem;color:var(--gray-500);flex-wrap:wrap;gap:.3rem}
-
-/* PROSE */
-.prose{font-size:.78rem;color:var(--gray-700);line-height:1.75}
-.prose strong{color:var(--gray-900)}
-
-/* TWO-TOWER SPACING CONTROL */
-.spacing-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
-.spacing-ctrl label{font-size:.78rem;color:var(--gray-700);white-space:nowrap}
-.spacing-ctrl input[type=range]{flex:1;accent-color:var(--green)}
-.spacing-ctrl .sv{min-width:70px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catava Air — Dynamisch Torensimulator v3</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════ -->
 <header>
-<div class="hdr">
-  <div class="logo">
-    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
-      <ellipse cx="15" cy="5.5" rx="9" ry="3.5" fill="#1D9E75" opacity=".9"/>
-      <path d="M6 5.5 Q9 15 11 25 L19 25 Q21 15 24 5.5" fill="none" stroke="#1D9E75" stroke-width="1.4"/>
-      <ellipse cx="15" cy="17" rx="6" ry="2.5" fill="none" stroke="#1D9E75" stroke-width=".9" opacity=".55"/>
-      <ellipse cx="15" cy="25" rx="9" ry="3.5" fill="#1D9E75" opacity=".35"/>
-    </svg>
-    <div>
-      <div class="logo-name">Catava Air</div>
-      <div class="logo-sub">Dynamisch Torensimulator v3</div>
+  <div class="hdr">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <ellipse cx="15" cy="5.5" rx="9" ry="3.5" fill="#1D9E75" opacity=".9"/>
+        <path d="M6 5.5 Q9 15 11 25 L19 25 Q21 15 24 5.5" fill="none" stroke="#1D9E75" stroke-width="1.4"/>
+        <ellipse cx="15" cy="17" rx="6" ry="2.5" fill="none" stroke="#1D9E75" stroke-width=".9" opacity=".55"/>
+        <ellipse cx="15" cy="25" rx="9" ry="3.5" fill="#1D9E75" opacity=".35"/>
+      </svg>
+      <div>
+        <div class="logo-name">Catava Air</div>
+        <div class="logo-sub">Dynamisch Torensimulator v3</div>
+      </div>
     </div>
+    <nav>
+      <button class="nb act" data-tab="geometrie">Geometrie</button>
+      <button class="nb" data-tab="performance">Performance</button>
+      <button class="nb" data-tab="dubbel">2 Torens</button>
+      <button class="nb" data-tab="hectare">Per hectare</button>
+      <button class="nb" data-tab="nozzles">Nozzles</button>
+      <button class="nb" data-tab="vd">VD-matrix</button>
+    </nav>
   </div>
-  <nav>
-    <button class="nb act" data-tab="geometrie">Geometrie</button>
-    <button class="nb" data-tab="performance">Performance</button>
-    <button class="nb" data-tab="dubbel">2 Torens</button>
-    <button class="nb" data-tab="hectare">Per hectare</button>
-    <button class="nb" data-tab="nozzles">Nozzles</button>
-    <button class="nb" data-tab="vd">VD-matrix</button>
-  </nav>
-</div>
 </header>
 
 <main>
 
-<!-- ══════════════════════════════════════════════
-     TAB 1 — GEOMETRIE
-══════════════════════════════════════════════ -->
-<section id="tab-geometrie" class="tp act">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>Torengeometrie — vrij instelbaar</h2>
-      <div class="ni-group" id="geom-inputs"></div>
-    </div>
-    <div class="card">
-      <h2>Berekende oppervlakken</h2>
-      <div class="grid4" id="r-geom-areas"></div>
-    </div>
-    <div class="card">
-      <h2>Zonehoogtes</h2>
-      <p class="prose">Totale toren = Boven-conus + Tussenstuk + Onder-conus. Pas elke zone afzonderlijk aan. De tekening rechts actualiseert direct.</p>
-      <div class="fbox" id="geom-formula"></div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="stitle">Doorsnede-aanzicht (schaal proportioneel)</div>
-    <div class="cw"><canvas id="cvs-tower" width="320" height="500"></canvas></div>
-  </div>
-</div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     TAB 2 — PERFORMANCE
-══════════════════════════════════════════════ -->
-<section id="tab-performance" class="tp">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>Klimaatinvoer</h2>
-      <div class="sg" id="sl-klimaat"></div>
-    </div>
-    <div class="card">
-      <h2>Waterinvoer</h2>
-      <div class="sg" id="sl-water"></div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="stitle">Kernresultaten per toren</div>
-    <div class="grid4" id="r-perf-main"></div>
-    <div class="fbox" id="r-perf-formula" style="margin-top:.75rem"></div>
-    <div class="stitle" style="margin-top:1rem">Venturi-analyse</div>
-    <div class="grid4" id="r-venturi"></div>
-    <div class="cw" style="margin-top:.75rem"><canvas id="cvs-venturi" width="460" height="240"></canvas></div>
-  </div>
-</div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     TAB 3 — 2 TORENS
-══════════════════════════════════════════════ -->
-<section id="tab-dubbel" class="tp">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>Afstand tussen torens</h2>
-      <div class="spacing-ctrl">
-        <label>Hart-op-hart afstand</label>
-        <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10" oninput="onSpacing(this.value)">
-        <span class="sv" id="sv-spacing">10,0 m</span>
+  <!-- ═══════════════════════════════════════
+       TAB 1 — GEOMETRIE
+  ═══════════════════════════════════════ -->
+  <section id="tab-geometrie" class="tp act">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>Torengeometrie — vrij instelbaar</h2>
+          <div class="ni-group" id="geom-inputs"></div>
+        </div>
+        <div class="card">
+          <h2>Berekende oppervlakken</h2>
+          <div class="grid4" id="r-geom-areas"></div>
+        </div>
+        <div class="card">
+          <h2>Formules</h2>
+          <div class="fbox" id="geom-formula"></div>
+        </div>
       </div>
-      <div class="card" style="background:var(--gray-100);border-color:var(--gray-300)">
-        <div class="grid4" id="r-dubbel-cards"></div>
+      <div class="col">
+        <div class="stitle">Doorsnede-aanzicht (schaal proportioneel)</div>
+        <div class="cw"><canvas id="cvs-tower" width="320" height="500"></canvas></div>
       </div>
     </div>
-    <div class="card">
-      <h2>Invloedszones</h2>
-      <p class="prose">Elke toren heeft een effectieve invloedsstraal. Bij overlap versterken de zones elkaar. De kleuroverlay toont de gecombineerde VD-reductie.</p>
-      <div class="grid4" id="r-dubbel-zone" style="margin-top:.5rem"></div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="stitle">Bovenaanzicht — 2 torens met invloedszones</div>
-    <div class="cw"><canvas id="cvs-dubbel-top" width="480" height="300"></canvas></div>
-    <div class="stitle" style="margin-top:.75rem">Zijaanzicht — schaal proportioneel</div>
-    <div class="cw"><canvas id="cvs-dubbel-side" width="480" height="220"></canvas></div>
-  </div>
-</div>
-</section>
+  </section>
 
-<!-- ══════════════════════════════════════════════
-     TAB 4 — PER HECTARE
-══════════════════════════════════════════════ -->
-<section id="tab-hectare" class="tp">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>Configuratie per hectare</h2>
-      <div class="sg" id="sl-ha"></div>
-      <div class="grid4" id="r-ha-main" style="margin-top:.6rem"></div>
-    </div>
-    <div class="card">
-      <h2>Inzetniveaus referentie</h2>
-      <div style="display:flex;flex-direction:column;gap:.45rem" id="r-levels"></div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="stitle">Rastervisualisatie per hectare</div>
-    <div class="cw"><canvas id="cvs-ha" width="460" height="460"></canvas></div>
-    <div class="stitle" style="margin-top:.75rem">Waterverbruik vs. torens/ha</div>
-    <div class="cw"><canvas id="cvs-ha-line" width="460" height="180"></canvas></div>
-  </div>
-</div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     TAB 5 — NOZZLES
-══════════════════════════════════════════════ -->
-<section id="tab-nozzles" class="tp">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>Nozzle-type selectie</h2>
-      <div id="nozzle-sel"></div>
-    </div>
-    <div class="card">
-      <h2>Ringconfiguratie</h2>
-      <div class="sg" id="sl-nozzle"></div>
-      <div class="grid4" id="r-nozzle-result" style="margin-top:.6rem"></div>
-    </div>
-    <div class="card">
-      <h2>Waterbalans</h2>
-      <div class="grid4" id="r-nozzle-balans"></div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="stitle">KBN-capaciteit per druk (beide types)</div>
-    <div style="overflow-x:auto">
-      <table id="nozzle-tbl" style="width:100%;border-collapse:collapse;font-size:.75rem">
-        <thead id="nozzle-thead"></thead>
-        <tbody id="nozzle-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     TAB 6 — VD-MATRIX
-══════════════════════════════════════════════ -->
-<section id="tab-vd" class="tp">
-<div class="grid2">
-  <div class="col">
-    <div class="card">
-      <h2>VD-doelbereik</h2>
-      <div class="sg" id="sl-vd"></div>
-      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;align-items:center;gap:7px;font-size:.72rem"><span style="width:11px;height:11px;border-radius:3px;background:#e1f5ee;border:1px solid #9FE1CB;display:inline-block"></span>Al goed (VD &lt; min)</div>
-        <div style="display:flex;align-items:center;gap:7px;font-size:.72rem"><span style="width:11px;height:11px;border-radius:3px;background:#c0dd97;border:1px solid #639922;display:inline-block"></span>Haalbaar (VD min–max)</div>
-        <div style="display:flex;align-items:center;gap:7px;font-size:.72rem"><span style="width:11px;height:11px;border-radius:3px;background:#faeeda;border:1px solid #FAC775;display:inline-block"></span>Grensgebied (8–10)</div>
-        <div style="display:flex;align-items:center;gap:7px;font-size:.72rem"><span style="width:11px;height:11px;border-radius:3px;background:#fac775;border:1px solid #EF9F27;display:inline-block"></span>Moeilijk (10–14)</div>
-        <div style="display:flex;align-items:center;gap:7px;font-size:.72rem"><span style="width:11px;height:11px;border-radius:3px;background:#f7c1c1;border:1px solid #E24B4A;display:inline-block"></span>Buiten bereik (&gt;14)</div>
+  <!-- ═══════════════════════════════════════
+       TAB 2 — PERFORMANCE
+  ═══════════════════════════════════════ -->
+  <section id="tab-performance" class="tp">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>Klimaatinvoer</h2>
+          <div class="sg" id="sl-klimaat"></div>
+        </div>
+        <div class="card">
+          <h2>Waterinvoer</h2>
+          <div class="sg" id="sl-water"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="stitle">Kernresultaten per toren</div>
+        <div class="grid4" id="r-perf-main"></div>
+        <div class="fbox" id="r-perf-formula" style="margin-top:.75rem"></div>
+        <div class="stitle" style="margin-top:1rem">Venturi-analyse</div>
+        <div class="grid4" id="r-venturi"></div>
+        <div class="cw" style="margin-top:.75rem">
+          <canvas id="cvs-venturi" width="460" height="240"></canvas>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <h2>Uitleg VD</h2>
-      <p class="prose">VD = verzadigde absolute vochtigheid − werkelijke absolute vochtigheid (g/m³). Optimaal voor gewas: <strong>VD 2–8 g/m³</strong>. Boven 10 g/m³ sluiten huidmondjes en stopt plantengroei.</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       TAB 3 — 2 TORENS
+  ═══════════════════════════════════════ -->
+  <section id="tab-dubbel" class="tp">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>Afstand tussen torens</h2>
+          <div class="spacing-ctrl">
+            <label>Hart-op-hart afstand</label>
+            <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10"
+                   oninput="onSpacing(this.value)">
+            <span class="sv" id="sv-spacing">10,0 m</span>
+          </div>
+          <div class="grid4" id="r-dubbel-cards" style="margin-top:.5rem"></div>
+        </div>
+        <div class="card">
+          <h2>Invloedszones</h2>
+          <p class="prose">Elke toren heeft een effectieve invloedsstraal. Bij overlap versterken de zones elkaar. De kleuroverlay toont de gecombineerde VD-reductie.</p>
+          <div class="grid4" id="r-dubbel-zone" style="margin-top:.5rem"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="stitle">Bovenaanzicht — invloedszones</div>
+        <div class="cw"><canvas id="cvs-dubbel-top" width="480" height="300"></canvas></div>
+        <div class="stitle" style="margin-top:.75rem">Zijaanzicht — op schaal</div>
+        <div class="cw"><canvas id="cvs-dubbel-side" width="480" height="220"></canvas></div>
+      </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="stitle">VD-matrix: temperatuur × relatieve vochtigheid (g/m³)</div>
-    <div style="overflow-x:auto"><table class="vdt" id="vd-matrix"></table></div>
-  </div>
-</div>
-</section>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       TAB 4 — PER HECTARE
+  ═══════════════════════════════════════ -->
+  <section id="tab-hectare" class="tp">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>Configuratie per hectare</h2>
+          <div class="sg" id="sl-ha"></div>
+          <div class="grid4" id="r-ha-main" style="margin-top:.6rem"></div>
+        </div>
+        <div class="card">
+          <h2>Inzetniveaus referentie</h2>
+          <div style="display:flex;flex-direction:column;gap:.45rem" id="r-levels"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="stitle">Rastervisualisatie 1 hectare (100×100 m)</div>
+        <div class="cw"><canvas id="cvs-ha" width="460" height="460"></canvas></div>
+        <div class="stitle" style="margin-top:.75rem">Waterverbruik vs. torens/ha</div>
+        <div class="cw"><canvas id="cvs-ha-line" width="460" height="180"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       TAB 5 — NOZZLES
+  ═══════════════════════════════════════ -->
+  <section id="tab-nozzles" class="tp">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>Nozzle-type selectie</h2>
+          <div id="nozzle-sel"></div>
+        </div>
+        <div class="card">
+          <h2>Ringconfiguratie</h2>
+          <div class="sg" id="sl-nozzle"></div>
+          <div class="grid4" id="r-nozzle-result" style="margin-top:.6rem"></div>
+        </div>
+        <div class="card">
+          <h2>Waterbalans per toren</h2>
+          <div class="grid4" id="r-nozzle-balans"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="stitle">KBN-capaciteit per druk (beide types)</div>
+        <div style="overflow-x:auto">
+          <table id="nozzle-tbl" style="width:100%;border-collapse:collapse;font-size:.75rem">
+            <thead id="nozzle-thead"></thead>
+            <tbody id="nozzle-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       TAB 6 — VD-MATRIX
+  ═══════════════════════════════════════ -->
+  <section id="tab-vd" class="tp">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <h2>VD-doelbereik instellen</h2>
+          <div class="sg" id="sl-vd"></div>
+          <div class="vd-legenda" style="margin-top:.75rem">
+            <div class="vd-leg"><span class="vd-dot" style="background:#e1f5ee;border:1px solid #9FE1CB"></span>Al goed (VD &lt; min)</div>
+            <div class="vd-leg"><span class="vd-dot" style="background:#c0dd97;border:1px solid #639922"></span>Haalbaar (VD min–max)</div>
+            <div class="vd-leg"><span class="vd-dot" style="background:#faeeda;border:1px solid #FAC775"></span>Grensgebied (8–10)</div>
+            <div class="vd-leg"><span class="vd-dot" style="background:#fac775;border:1px solid #EF9F27"></span>Moeilijk (10–14)</div>
+            <div class="vd-leg"><span class="vd-dot" style="background:#f7c1c1;border:1px solid #E24B4A"></span>Buiten bereik (&gt;14)</div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Uitleg VD</h2>
+          <p class="prose">
+            Vochtdeficit (VD) is het verschil tussen de verzadigde absolute vochtigheid en
+            de werkelijke absolute vochtigheid (g/m³). Optimaal voor gewasgroei:
+            <strong>VD 2–8 g/m³</strong>. Boven 10 g/m³ sluiten huidmondjes en stopt plantengroei.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="stitle">VD-matrix (g/m³): temperatuur × relatieve vochtigheid</div>
+        <div style="overflow-x:auto">
+          <table class="vdt" id="vd-matrix"></table>
+        </div>
+      </div>
+    </div>
+  </section>
 
 </main>
-<footer><div class="ftr">
-  <span>Catava Air BV — Dynamisch Torensimulator v3</span>
-  <span id="ft-geom"></span>
-  <span id="ft-ts"></span>
-</div></footer>
 
-<script>
-// ═══════════════════════════════════════════════════════════════
-// CONSTANTEN
-// ═══════════════════════════════════════════════════════════════
-const HVAP=2450, CP=1.006, RHO=1.15;
-
-// ═══════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════
-const G = {
-  D_top:1067, D_throat:800, D_mid:800, D_bot:1000,
-  H_top:1950, H_mid:1500, H_bot:400,
-};
-const S = {
-  Tin:35, RV:30, dT:10, eta:85, water:48,
-  NT:32, NR:8, P1:20, P2:31, nozzle:'80125',
-  spacing:10, vdMin:2, vdMax:8,
-};
-
-// Computed area (m²)
-function A(Dmm){ return Math.PI*(Dmm/2000)**2; }
-function totalH(){ return G.H_top+G.H_mid+G.H_bot; }
-
-// ═══════════════════════════════════════════════════════════════
-// NOZZLE PHYSICS  q ∝ √P  (ref: 7.5 l/h @ 10bar for 80125)
-// ═══════════════════════════════════════════════════════════════
-const NOZZLES = {
-  '80125':{ lbl:'KBN 80125', qRef:7.5,  desc:'0,125 L/min — koeling' },
-  '80063':{ lbl:'KBN 80063', qRef:3.78, desc:'0,063 L/min — VD-sturing' },
-};
-function nozzleQ(type,bar){ return NOZZLES[type].qRef*Math.sqrt(bar/10); }
-
-// ═══════════════════════════════════════════════════════════════
-// CORE COMPUTE
-// ═══════════════════════════════════════════════════════════════
-function compute(){
-  const eta=S.eta/100;
-  const Qmax=(S.water/3600)*HVAP;
-  const Qnet=Qmax*eta;
-  const mAir=Qnet/(CP*S.dT);
-  const Vair=mAir/RHO;
-  const Vairh=Vair*3600;
-  const Tout=S.Tin-S.dT;
-
-  const a1=A(G.D_top), a2=A(G.D_throat), a3=A(G.D_mid), a4=A(G.D_bot);
-  const v1=Vair/a1, v2=Vair/a2, v3=Vair/a3, v4=Vair/a4;
-  const dP=0.5*RHO*(v2**2-v1**2)/100;
-  const H_m=totalH()/1000;
-  const avgV=(v1+v2+v3+v4)/4;
-  const verblijf=H_m/avgV;
-
-  const vdIn=satH(S.Tin)*(1-S.RV/100);
-  const vdOut=satH(Tout)*0.03;
-  const moistAdd=(S.water*eta)/(Vairh||1);
-
-  const f1=nozzleQ(S.nozzle,S.P1), f2=nozzleQ(S.nozzle,S.P2);
-  const wR1=S.NR*f1, wR2=S.NR*f2, wTot=wR1+wR2;
-
-  const m2=10000/S.NT;
-  const radius=Math.sqrt(m2/Math.PI);
-  const hoh=Math.sqrt(m2);
-
-  return {eta,Qmax,Qnet,mAir,Vairh,Tout,a1,a2,a3,a4,v1,v2,v3,v4,
-          dP,verblijf,vdIn,vdOut,moistAdd,f1,f2,wR1,wR2,wTot,m2,radius,hoh};
-}
-
-function satH(T){ return 4.849*Math.exp(0.0653*T); }
-
-// ═══════════════════════════════════════════════════════════════
-// HTML HELPERS
-// ═══════════════════════════════════════════════════════════════
-function mc(lbl,val,unit,cls){
-  return `<div class="mc ${cls||''}"><div class="mc-lbl">${lbl}</div><div class="mc-val">${val}</div><div class="mc-uni">${unit}</div></div>`;
-}
-function r2(v){return Math.round(v*100)/100;}
-function r1(v){return Math.round(v*10)/10;}
-
-// ═══════════════════════════════════════════════════════════════
-// GEOMETRY INPUTS
-// ═══════════════════════════════════════════════════════════════
-function buildGeomInputs(){
-  const fields=[
-    {id:'D_top',  lbl:'Ø boven (binnenmaat)',  unit:'mm'},
-    {id:'D_throat',lbl:'Ø venturi-keel',       unit:'mm'},
-    {id:'D_mid',  lbl:'Ø tussenstuk',          unit:'mm'},
-    {id:'D_bot',  lbl:'Ø onderzijde',          unit:'mm'},
-    {id:'H_top',  lbl:'H boven-conus',         unit:'mm'},
-    {id:'H_mid',  lbl:'H tussenstuk',          unit:'mm'},
-    {id:'H_bot',  lbl:'H onder-uitloop',       unit:'mm'},
-  ];
-  document.getElementById('geom-inputs').innerHTML=
-    fields.map(f=>`
-      <div class="ni-wrap">
-        <label>${f.lbl}</label>
-        <input type="number" id="gi-${f.id}" value="${G[f.id]}" min="100" max="5000" step="10"
-               oninput="onGeom('${f.id}',this.value)">
-        <span class="ni-unit">${f.unit}</span>
-      </div>`).join('');
-}
-
-function onGeom(id,val){
-  G[id]=+val||G[id];
-  renderAll();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SLIDERS
-// ═══════════════════════════════════════════════════════════════
-const SLIDER_DEFS={
-  klimaat:[
-    {id:'Tin',  lbl:'Buitentemperatuur', min:20,max:45,step:1,  fmt:v=>v+' °C'},
-    {id:'RV',   lbl:'Rel. vochtigheid',  min:10,max:90,step:5,  fmt:v=>v+' %'},
-    {id:'dT',   lbl:'Doelkoeling ΔT',    min:3, max:15,step:1,  fmt:v=>v+' K'},
-    {id:'eta',  lbl:'Verdampingserendement', min:50,max:100,step:5,fmt:v=>v+' %'},
-  ],
-  water:[
-    {id:'water',lbl:'Water per toren',   min:10,max:100,step:2, fmt:v=>v+' l/h'},
-  ],
-  ha:[
-    {id:'NT',   lbl:'Torens per hectare',min:15,max:55,step:1,  fmt:v=>v+' /ha'},
-  ],
-  nozzle:[
-    {id:'NR',   lbl:'Nozzles per ring',  min:4, max:20,step:1,  fmt:v=>v},
-    {id:'P1',   lbl:'Druk ring 1',       min:3, max:35,step:1,  fmt:v=>v+' bar'},
-    {id:'P2',   lbl:'Druk ring 2',       min:3, max:35,step:1,  fmt:v=>v+' bar'},
-  ],
-  vd:[
-    {id:'vdMin',lbl:'VD-doel minimum',   min:0, max:5, step:1,  fmt:v=>v+' g/m³'},
-    {id:'vdMax',lbl:'VD-doel maximum',   min:5, max:14,step:1,  fmt:v=>v+' g/m³'},
-  ],
-};
-
-function buildSliders(group,containerId){
-  const defs=SLIDER_DEFS[group];
-  const el=document.getElementById(containerId);
-  if(!el) return;
-  el.innerHTML=defs.map(d=>`
-    <div class="sr">
-      <label for="sl-${d.id}">${d.lbl}</label>
-      <input type="range" id="sl-${d.id}" min="${d.min}" max="${d.max}" step="${d.step}"
-             value="${S[d.id]}" oninput="onSlider('${d.id}',this.value,'${group}')">
-      <span class="sv" id="sv-${d.id}">${d.fmt(S[d.id])}</span>
-    </div>`).join('');
-}
-
-function onSlider(id,val,group){
-  S[id]=+val;
-  const def=SLIDER_DEFS[group].find(d=>d.id===id);
-  const sv=document.getElementById('sv-'+id);
-  if(sv&&def) sv.textContent=def.fmt(+val);
-  renderAll();
-}
-
-function onSpacing(val){
-  S.spacing=+val;
-  document.getElementById('sv-spacing').textContent=r1(+val)+' m';
-  renderDubbel(compute());
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER GEOMETRIE
-// ═══════════════════════════════════════════════════════════════
-function renderGeometrie(c){
-  document.getElementById('r-geom-areas').innerHTML=
-    mc('Ø boven ('+G.D_top+' mm)', r2(c.a1*10000)/10000,'m²','')+
-    mc('Ø keel ('+G.D_throat+' mm)', r2(c.a2*10000)/10000,'m²','wn')+
-    mc('Ø tussen ('+G.D_mid+' mm)', r2(c.a3*10000)/10000,'m²','')+
-    mc('Ø onder ('+G.D_bot+' mm)', r2(c.a4*10000)/10000,'m²','')+
-    mc('A-reductie boven→keel', r1((1-c.a2/c.a1)*100)+'%','vernauwing','wn')+
-    mc('Totale hoogte', (totalH()/1000).toFixed(3),'m','');
-
-  document.getElementById('geom-formula').innerHTML=
-    `Totale hoogte: ${G.H_top} + ${G.H_mid} + ${G.H_bot} = <span class="fv">${totalH()} mm</span>\n`+
-    `A_boven  = π×(${G.D_top}/2)²/10⁶ = <span class="fv">${c.a1.toFixed(4)} m²</span>\n`+
-    `A_keel   = π×(${G.D_throat}/2)²/10⁶ = <span class="fv">${c.a2.toFixed(4)} m²</span>\n`+
-    `A_reductie keel = <span class="fv">${r1((1-c.a2/c.a1)*100)}%</span>  |  ratio A1/A2 = <span class="fv">${(c.a1/c.a2).toFixed(2)}×</span>`;
-
-  document.getElementById('ft-geom').textContent=
-    `Geometrie: Ø${G.D_top}/${G.D_throat}/${G.D_mid}/${G.D_bot} mm | H=${totalH()} mm`;
-
-  drawTower('cvs-tower');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DRAW TOWER CANVAS
-// ═══════════════════════════════════════════════════════════════
-function drawTower(canvasId){
-  const cv=document.getElementById(canvasId);
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width, H=cv.height;
-  ctx.clearRect(0,0,W,H);
-
-  const padL=70, padR=72, padT=36, padB=36;
-  const gH=H-padT-padB;
-  const cx=padL+(W-padL-padR)/2;
-
-  const total=totalH();
-  const yT=padT;
-  const yK=padT+(G.H_top/total)*gH;
-  const yM=padT+((G.H_top+G.H_mid)/total)*gH;
-  const yB=padT+gH;
-
-  // Max display radius
-  const maxD=Math.max(G.D_top,G.D_throat,G.D_mid,G.D_bot);
-  const scale=(W-padL-padR)/2/maxD;
-  const rT=G.D_top*scale;
-  const rK=G.D_throat*scale;
-  const rM=G.D_mid*scale;
-  const rB=G.D_bot*scale;
-
-  // Fill background
-  ctx.beginPath();
-  ctx.moveTo(cx-rT,yT);
-  ctx.lineTo(cx-rK,yK);
-  ctx.lineTo(cx-rM,yM);
-  ctx.lineTo(cx-rB,yB);
-  ctx.lineTo(cx+rB,yB);
-  ctx.lineTo(cx+rM,yM);
-  ctx.lineTo(cx+rK,yK);
-  ctx.lineTo(cx+rT,yT);
-  ctx.closePath();
-  ctx.fillStyle='rgba(29,158,117,0.07)';
-  ctx.fill();
-  ctx.strokeStyle='#1D9E75';
-  ctx.lineWidth=2;
-  ctx.stroke();
-
-  // Keel lijn
-  ctx.beginPath();
-  ctx.moveTo(cx-rK,yK);
-  ctx.lineTo(cx+rK,yK);
-  ctx.setLineDash([5,3]);
-  ctx.strokeStyle='#EF9F27';
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Tussenstuk lijn
-  ctx.beginPath();
-  ctx.moveTo(cx-rM,yM);
-  ctx.lineTo(cx+rM,yM);
-  ctx.setLineDash([3,4]);
-  ctx.strokeStyle='rgba(100,100,100,0.3)';
-  ctx.lineWidth=1;
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Nozzle dots (2 ringen)
-  const yN1=yT+(yK-yT)*0.35;
-  const rN1=rT+(rK-rT)*0.35;
-  const yN2=yT+(yK-yT)*0.7;
-  const rN2=rT+(rK-rT)*0.7;
-  [[yN1,rN1,'#BA7517'],[yN2,rN2,'#185FA5']].forEach(([y,r,col])=>{
-    ctx.beginPath();
-    ctx.ellipse(cx,y,r*0.38,4,0,0,Math.PI*2);
-    ctx.fillStyle=col;
-    ctx.globalAlpha=0.75;
-    ctx.fill();
-    ctx.globalAlpha=1;
-  });
-
-  // Diameter labels rechts
-  const lblStyle=(col)=>{ ctx.font='10px sans-serif'; ctx.fillStyle=col; ctx.textAlign='left'; };
-  lblStyle('#185FA5');
-  ctx.fillText('Ø'+G.D_top+'mm',cx+rT+5,yT+12);
-  lblStyle('#BA7517');
-  ctx.fillText('Ø'+G.D_throat+'mm',cx+rK+5,yK+4);
-  lblStyle('#888780');
-  ctx.fillText('Ø'+G.D_mid+'mm',cx+rM+5,yM+4);
-  lblStyle('#185FA5');
-  ctx.fillText('Ø'+G.D_bot+'mm',cx+rB+5,yB-4);
-
-  // Hoogte labels links
-  const drawHLbl=(y1,y2,lbl,col)=>{
-    ctx.strokeStyle=col||'#888780';
-    ctx.lineWidth=0.8;
-    ctx.setLineDash([2,3]);
-    ctx.beginPath(); ctx.moveTo(padL-18,y1); ctx.lineTo(padL-18,y2); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(padL-22,y1); ctx.lineTo(padL-14,y1); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(padL-22,y2); ctx.lineTo(padL-14,y2); ctx.stroke();
-    ctx.save();
-    ctx.translate(padL-30,(y1+y2)/2);
-    ctx.rotate(-Math.PI/2);
-    ctx.font='9px sans-serif';
-    ctx.fillStyle=col||'#888780';
-    ctx.textAlign='center';
-    ctx.fillText(lbl,0,0);
-    ctx.restore();
-  };
-  drawHLbl(yT,yK,G.H_top+'mm','#1D9E75');
-  drawHLbl(yK,yM,G.H_mid+'mm','#888780');
-  drawHLbl(yM,yB,G.H_bot+'mm','#BA7517');
-
-  // Total height bracket
-  ctx.strokeStyle='rgba(0,0,0,0.15)';
-  ctx.lineWidth=0.5;
-  ctx.setLineDash([2,4]);
-  ctx.beginPath(); ctx.moveTo(padL-48,yT); ctx.lineTo(padL-48,yB); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.beginPath(); ctx.moveTo(padL-52,yT); ctx.lineTo(padL-44,yT); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(padL-52,yB); ctx.lineTo(padL-44,yB); ctx.stroke();
-  ctx.save();
-  ctx.translate(padL-58,(yT+yB)/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.font='10px sans-serif';
-  ctx.fillStyle='rgba(0,0,0,0.45)';
-  ctx.textAlign='center';
-  ctx.fillText(totalH()+'mm totaal',0,0);
-  ctx.restore();
-
-  // Air arrows
-  drawArrow(ctx,cx,yT-22,cx,yT+2,'#1D9E75',2);
-  ctx.font='9px sans-serif'; ctx.fillStyle='#1D9E75'; ctx.textAlign='center';
-  ctx.fillText('lucht in',cx,yT-25);
-  drawArrow(ctx,cx-14,yB-3,cx-26,yB+18,'#1D9E75',1.5);
-  drawArrow(ctx,cx+14,yB-3,cx+26,yB+18,'#1D9E75',1.5);
-  ctx.fillText('lucht uit',cx,yB+28);
-}
-
-function drawArrow(ctx,x1,y1,x2,y2,col,w){
-  ctx.strokeStyle=col; ctx.lineWidth=w;
-  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  const a=Math.atan2(y2-y1,x2-x1);
-  ctx.fillStyle=col;
-  ctx.beginPath();
-  ctx.moveTo(x2,y2);
-  ctx.lineTo(x2-7*Math.cos(a-.4),y2-7*Math.sin(a-.4));
-  ctx.lineTo(x2-7*Math.cos(a+.4),y2-7*Math.sin(a+.4));
-  ctx.closePath(); ctx.fill();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER PERFORMANCE
-// ═══════════════════════════════════════════════════════════════
-function renderPerformance(c){
-  document.getElementById('r-perf-main').innerHTML=
-    mc('Water',S.water,'l/h','')+
-    mc('Koelvermogen netto',r1(c.Qnet),'kW','hi')+
-    mc('Koelvermogen max.',r1(c.Qmax),'kW','')+
-    mc('Luchtdebiet',Math.round(c.Vairh),'m³/h','hi')+
-    mc('Uitlaattemperatuur',r1(c.Tout),'°C','ok')+
-    mc('VD inlaat',r1(c.vdIn),'g/m³','')+
-    mc('VD uitlaat',r1(c.vdOut),'g/m³','ok')+
-    mc('Vochttoevoeging',r2(c.moistAdd),'g/m³','');
-
-  document.getElementById('r-perf-formula').innerHTML=
-    `Q<sub>max</sub> = ${S.water}/3600 × 2450 = <span class="fv">${r1(c.Qmax)} kW</span>  `+
-    `Q<sub>netto</sub> = ${r1(c.Qmax)} × ${S.eta}% = <span class="fv">${r1(c.Qnet)} kW</span>\n`+
-    `ṁ<sub>lucht</sub> = ${r1(c.Qnet)} / (1,006 × ${S.dT}) = <span class="fv">${r2(c.mAir)} kg/s</span>  `+
-    `V̇ = <span class="fv">${Math.round(c.Vairh)} m³/h</span>`;
-
-  document.getElementById('r-venturi').innerHTML=
-    mc('v boven Ø'+G.D_top,r2(c.v1),'m/s','')+
-    mc('v keel Ø'+G.D_throat,r2(c.v2),'m/s','wn')+
-    mc('v tussen Ø'+G.D_mid,r2(c.v3),'m/s','')+
-    mc('v onder Ø'+G.D_bot,r2(c.v4),'m/s','')+
-    mc('Versnelling keel',r2(c.v2/c.v1)+'×','t.o.v. boven','hi')+
-    mc('ΔP Bernoulli',r2(c.dP),'mbar','hi')+
-    mc('Verblijftijd',r1(c.verblijf),'sec','');
-
-  drawVenturiChart(c);
-}
-
-function drawVenturiChart(c){
-  const cv=document.getElementById('cvs-venturi');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-  const pL=50,pR=20,pT=28,pB=38;
-  const gW=W-pL-pR, gH=H-pT-pB;
-
-  const zones=[
-    {lbl:'Boven\nØ'+G.D_top,v:c.v1,col:'#1D9E75'},
-    {lbl:'Keel\nØ'+G.D_throat,v:c.v2,col:'#EF9F27'},
-    {lbl:'Tussen\nØ'+G.D_mid,v:c.v3,col:'#888780'},
-    {lbl:'Onder\nØ'+G.D_bot,v:c.v4,col:'#185FA5'},
-  ];
-  const maxV=Math.max(...zones.map(z=>z.v))*1.25;
-
-  // Grid
-  for(let i=0;i<=4;i++){
-    const y=pT+gH-(i/4)*gH;
-    ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=0.5;
-    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(pL+gW,y); ctx.stroke();
-    ctx.font='9px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='right';
-    ctx.fillText((maxV*i/4).toFixed(1),pL-4,y+3);
-  }
-
-  // Y-axis label
-  ctx.save(); ctx.translate(12,pT+gH/2); ctx.rotate(-Math.PI/2);
-  ctx.font='10px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='center';
-  ctx.fillText('m/s',0,0); ctx.restore();
-
-  const bW=gW/zones.length*0.52;
-  zones.forEach((z,i)=>{
-    const x=pL+(i+0.5)*(gW/zones.length)-bW/2;
-    const bH=(z.v/maxV)*gH;
-    const y=pT+gH-bH;
-    ctx.fillStyle=z.col; ctx.globalAlpha=0.82;
-    ctx.beginPath();
-    if(ctx.roundRect) ctx.roundRect(x,y,bW,bH,[4,4,0,0]);
-    else ctx.rect(x,y,bW,bH);
-    ctx.fill(); ctx.globalAlpha=1;
-    ctx.font='10px sans-serif'; ctx.fillStyle=z.col; ctx.textAlign='center';
-    ctx.fillText(z.v.toFixed(2)+' m/s',x+bW/2,y-5);
-    z.lbl.split('\n').forEach((ln,li)=>{
-      ctx.font='9px sans-serif'; ctx.fillStyle='#888';
-      ctx.fillText(ln,x+bW/2,pT+gH+14+li*12);
-    });
-  });
-
-  // Arrow boven→keel
-  const x1=pL+0.5*(gW/4)+bW/2+5, x2=pL+1.5*(gW/4)-bW/2-5;
-  ctx.font='10px sans-serif'; ctx.fillStyle='#EF9F27'; ctx.textAlign='center';
-  ctx.fillText('×'+(c.v2/c.v1).toFixed(2),(x1+x2)/2,pT+gH*0.28);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER DUBBEL
-// ═══════════════════════════════════════════════════════════════
-function renderDubbel(c){
-  const spacing=S.spacing;
-  const radius=c.radius;
-  const overlap=Math.max(0,radius*2-spacing);
-  const pct=overlap>0 ? Math.round(overlap/(radius*2)*100) : 0;
-
-  document.getElementById('r-dubbel-cards').innerHTML=
-    mc('Afstand hart-op-hart',spacing,'m','')+
-    mc('Invloedsstraal',r1(radius),'m/toren','hi')+
-    mc('Overlap',overlap>0?r1(overlap):0,'m',''+( overlap>0?'wn':'ok'))+
-    mc('Overlap %',pct,'%',pct>50?'wn':'');
-
-  document.getElementById('r-dubbel-zone').innerHTML=
-    mc('2× koelvermogen',r1(c.Qnet*2),'kW','')+
-    mc('2× luchtdebiet',Math.round(c.Vairh*2),'m³/h','')+
-    mc('Overlap zone',overlap>0?'Versterking':'Geen overlap',
-       overlap>0?`+${pct}% dekkingsversterking`:'torens onafhankelijk',
-       overlap>0?'ok':'');
-
-  drawDubbelTop(c,spacing,radius);
-  drawDubbelSide(c,spacing);
-}
-
-function drawDubbelTop(c,spacing,radius){
-  const cv=document.getElementById('cvs-dubbel-top');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-
-  // Scale so both towers + zones fit
-  const total=spacing+radius*2;
-  const scale=Math.min((W-60)/total,(H-60)/((radius*2)+20));
-  const cy=H/2;
-  const cx1=W/2-(spacing/2)*scale;
-  const cx2=W/2+(spacing/2)*scale;
-  const r=radius*scale;
-
-  // Grid lines
-  ctx.strokeStyle='rgba(0,0,0,0.04)'; ctx.lineWidth=0.5;
-  for(let i=0;i<=8;i++){
-    const x=i*(W/8);
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
-  }
-
-  // Influence zones
-  [[cx1,'#1D9E75'],[cx2,'#185FA5']].forEach(([x,col])=>{
-    ctx.beginPath();
-    ctx.arc(x,cy,r,0,Math.PI*2);
-    ctx.fillStyle=col; ctx.globalAlpha=0.12; ctx.fill();
-    ctx.strokeStyle=col; ctx.globalAlpha=0.35; ctx.lineWidth=1.5;
-    ctx.stroke(); ctx.globalAlpha=1;
-  });
-
-  // Overlap zone highlight
-  if(spacing<radius*2){
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx1,cy,r,0,Math.PI*2);
-    ctx.clip();
-    ctx.beginPath(); ctx.arc(cx2,cy,r,0,Math.PI*2);
-    ctx.fillStyle='rgba(29,158,117,0.25)'; ctx.fill();
-    ctx.restore();
-  }
-
-  // Tower dots
-  [[cx1,'#1D9E75','Toren 1'],[cx2,'#185FA5','Toren 2']].forEach(([x,col,lbl])=>{
-    const tr=Math.max(8,(G.D_top/2)*scale*0.045);
-    ctx.beginPath(); ctx.arc(x,cy,tr,0,Math.PI*2);
-    ctx.fillStyle=col; ctx.fill();
-    ctx.font='11px sans-serif'; ctx.fillStyle=col; ctx.textAlign='center';
-    ctx.fillText(lbl,x,cy+tr+14);
-  });
-
-  // Spacing arrow
-  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1;
-  ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(cx1,cy-r*0.7); ctx.lineTo(cx2,cy-r*0.7); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.font='10px sans-serif'; ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.textAlign='center';
-  ctx.fillText(spacing+' m hart-op-hart',(cx1+cx2)/2,cy-r*0.7-7);
-
-  // Radius labels
-  ctx.font='9px sans-serif'; ctx.fillStyle='#1D9E75'; ctx.textAlign='center';
-  ctx.fillText('r='+r1(radius)+'m',cx1,cy-r-8);
-  ctx.fillStyle='#185FA5';
-  ctx.fillText('r='+r1(radius)+'m',cx2,cy-r-8);
-
-  // Scale bar
-  const barM=5, barPx=barM*scale;
-  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(W-50,H-15); ctx.lineTo(W-50+barPx,H-15); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W-50,H-12); ctx.lineTo(W-50,H-18); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W-50+barPx,H-12); ctx.lineTo(W-50+barPx,H-18); ctx.stroke();
-  ctx.font='9px sans-serif'; ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.textAlign='center';
-  ctx.fillText(barM+'m',W-50+barPx/2,H-6);
-}
-
-function drawDubbelSide(c,spacing){
-  const cv=document.getElementById('cvs-dubbel-side');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-
-  const maxH=totalH();
-  const maxD=Math.max(G.D_top,G.D_bot)*2+spacing*1000;
-  const scaleH=(H-50)/(maxH);
-  const scaleW=(W-60)/(maxD);
-  const scale=Math.min(scaleH,scaleW)*900;
-
-  const ground=H-24;
-  const towerH=maxH*scale/1000;
-
-  // Ground
-  ctx.fillStyle='#d0cec4'; ctx.fillRect(0,ground,W,H-ground);
-  ctx.strokeStyle='#b0ae9a'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,ground); ctx.lineTo(W,ground); ctx.stroke();
-
-  const cx1=W/2-(spacing/2)*(W-60)/(spacing+1.5);
-  const cx2=W/2+(spacing/2)*(W-60)/(spacing+1.5);
-
-  const drawSideTower=(cx,col)=>{
-    const rTop=G.D_top/2*scale/1000;
-    const rKeel=G.D_throat/2*scale/1000;
-    const rMid=G.D_mid/2*scale/1000;
-    const rBot=G.D_bot/2*scale/1000;
-    const yTop=ground-towerH;
-    const yKeel=ground-towerH*(1-(G.H_top/totalH()));
-    const yMid=ground-towerH*((G.H_bot)/totalH());
-    const yBot=ground;
-
-    ctx.beginPath();
-    ctx.moveTo(cx-rTop,yTop);
-    ctx.lineTo(cx-rKeel,yKeel);
-    ctx.lineTo(cx-rMid,yMid);
-    ctx.lineTo(cx-rBot,yBot);
-    ctx.lineTo(cx+rBot,yBot);
-    ctx.lineTo(cx+rMid,yMid);
-    ctx.lineTo(cx+rKeel,yKeel);
-    ctx.lineTo(cx+rTop,yTop);
-    ctx.closePath();
-    ctx.fillStyle=col; ctx.globalAlpha=0.15; ctx.fill();
-    ctx.strokeStyle=col; ctx.globalAlpha=0.9; ctx.lineWidth=2; ctx.stroke();
-    ctx.globalAlpha=1;
-
-    // Height label
-    ctx.font='9px sans-serif'; ctx.fillStyle=col; ctx.textAlign='center';
-    ctx.fillText((totalH()/1000).toFixed(2)+'m',cx,yTop-8);
-  };
-
-  drawSideTower(cx1,'#1D9E75');
-  drawSideTower(cx2,'#185FA5');
-
-  // spacing label
-  ctx.font='10px sans-serif'; ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.textAlign='center';
-  ctx.fillText(spacing+' m',(cx1+cx2)/2,H-5);
-  ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=0.8; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(cx1,ground+4); ctx.lineTo(cx2,ground+4); ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER HECTARE
-// ═══════════════════════════════════════════════════════════════
-function renderHectare(c){
-  document.getElementById('r-ha-main').innerHTML=
-    mc('Water totaal',Math.round(S.NT*S.water),'l/h per ha','')+
-    mc('Water/dag (10u)',r1(S.NT*S.water*10/1000),'m³','') +
-    mc('Koelvermogen',Math.round(S.NT*c.Qnet),'kW per ha','hi')+
-    mc('Luchtdebiet',(S.NT*c.Vairh/1000).toFixed(0)+'k','m³/h per ha','hi')+
-    mc('m² per toren',Math.round(c.m2),'m²','')+
-    mc('Invloedsstraal',r1(c.radius),'m','')+
-    mc('Hart-op-hart',r1(c.hoh),'m raster','')+
-    mc('Torens',S.NT,'per hectare','');
-
-  const levels=[
-    {lbl:'Lichte VD-sturing',range:'15–20',m2:'400–500',act:S.NT<=20},
-    {lbl:'Normaal koeling + RV',range:'25–30',m2:'300–400',act:S.NT>20&&S.NT<=30},
-    {lbl:'Intensief (aardbei)',range:'35–40',m2:'250–300',act:S.NT>30&&S.NT<=42},
-    {lbl:'Maximum dekking',range:'45–55',m2:'180–250',act:S.NT>42},
-  ];
-  document.getElementById('r-levels').innerHTML=levels.map(l=>`
-    <div class="lc ${l.act?'lca':''}">
-      <div><div class="lc-name">${l.lbl}</div><div class="lc-det">${l.m2} m²/toren</div></div>
-      <span class="lbdg">${l.range}/ha</span>
-    </div>`).join('');
-
-  drawHaGrid(c);
-  drawHaLine(c);
-}
-
-function drawHaGrid(c){
-  const cv=document.getElementById('cvs-ha');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-
-  const pad=20;
-  const gW=W-pad*2, gH=H-pad*2;
-  const ha=100, hb=100; // 100×100m = 1 ha
-  const scX=gW/ha, scY=gH/hb;
-
-  // Background
-  ctx.fillStyle='#f8f6f0';
-  ctx.fillRect(pad,pad,gW,gH);
-  ctx.strokeStyle='#d0cec4'; ctx.lineWidth=1;
-  ctx.strokeRect(pad,pad,gW,gH);
-
-  // Grid lines every 10m
-  ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=0.5;
-  for(let i=10;i<100;i+=10){
-    ctx.beginPath(); ctx.moveTo(pad+i*scX,pad); ctx.lineTo(pad+i*scX,pad+gH); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pad,pad+i*scY); ctx.lineTo(pad+gW,pad+i*scY); ctx.stroke();
-  }
-
-  // Place towers in grid
-  const n=S.NT;
-  const cols=Math.round(Math.sqrt(n*(gW/gH)));
-  const rows=Math.ceil(n/cols);
-  const dx=gW/cols, dy=gH/rows;
-  const rPx=c.radius*scX;
-
-  let count=0;
-  for(let row=0;row<rows&&count<n;row++){
-    for(let col=0;col<cols&&count<n;col++){
-      const x=pad+(col+0.5)*dx;
-      const y=pad+(row+0.5)*dy;
-      // Influence zone
-      ctx.beginPath(); ctx.arc(x,y,rPx,0,Math.PI*2);
-      ctx.fillStyle='rgba(29,158,117,0.12)'; ctx.fill();
-      ctx.strokeStyle='rgba(29,158,117,0.3)'; ctx.lineWidth=0.8;
-      ctx.stroke();
-      // Tower dot
-      ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2);
-      ctx.fillStyle='#1D9E75'; ctx.fill();
-      count++;
-    }
-  }
-
-  // Labels
-  ctx.font='10px sans-serif'; ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.textAlign='center';
-  ctx.fillText('100 m',pad+gW/2,H-4);
-  ctx.save(); ctx.translate(10,pad+gH/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText('100 m',0,0); ctx.restore();
-  ctx.fillStyle='#1D9E75';
-  ctx.fillText(n+' torens / 1 ha',pad+gW/2,pad+12);
-}
-
-function drawHaLine(c){
-  const cv=document.getElementById('cvs-ha-line');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-  const pL=48,pR=16,pT=18,pB=34;
-  const gW=W-pL-pR, gH=H-pT-pB;
-
-  const pts=[15,20,25,30,35,40,45,50,55];
-  const vals=pts.map(n=>n*S.water/1000);
-  const maxV=Math.max(...vals)*1.15;
-
-  for(let i=0;i<=4;i++){
-    const y=pT+gH-(i/4)*gH;
-    ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=0.5;
-    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(pL+gW,y); ctx.stroke();
-    ctx.font='9px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='right';
-    ctx.fillText((maxV*i/4).toFixed(1),pL-4,y+3);
-  }
-  ctx.save(); ctx.translate(12,pT+gH/2); ctx.rotate(-Math.PI/2);
-  ctx.font='9px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='center';
-  ctx.fillText('m³/h',0,0); ctx.restore();
-
-  ctx.strokeStyle='#1D9E75'; ctx.lineWidth=2;
-  ctx.beginPath();
-  pts.forEach((n,i)=>{
-    const x=pL+(i/(pts.length-1))*gW;
-    const y=pT+gH-(vals[i]/maxV)*gH;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-
-  pts.forEach((n,i)=>{
-    const x=pL+(i/(pts.length-1))*gW;
-    const y=pT+gH-(vals[i]/maxV)*gH;
-    ctx.beginPath(); ctx.arc(x,y,n===S.NT?6:3.5,0,Math.PI*2);
-    ctx.fillStyle=n===S.NT?'#EF9F27':'#1D9E75'; ctx.fill();
-    ctx.font='9px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='center';
-    ctx.fillText(n,x,pT+gH+16);
-  });
-
-  ctx.font='9px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='center';
-  ctx.fillText('torens per hectare',pL+gW/2,pT+gH+28);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER NOZZLES
-// ═══════════════════════════════════════════════════════════════
-function renderNozzles(c){
-  // Selector
-  document.getElementById('nozzle-sel').innerHTML=
-    Object.entries(NOZZLES).map(([k,n])=>`
-      <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1.5px solid ${k===S.nozzle?'#1D9E75':'#d0cec4'};border-radius:8px;cursor:pointer;margin-bottom:6px;background:${k===S.nozzle?'#E1F5EE':'#fff'}">
-        <input type="radio" name="nz" value="${k}" ${k===S.nozzle?'checked':''} onchange="onNozzle('${k}')" style="margin-top:3px;accent-color:#1D9E75">
-        <div>
-          <div style="font-weight:700;font-size:.8rem">${n.lbl}</div>
-          <div style="font-size:.7rem;color:#888;margin-top:2px">${n.desc} | ${n.qRef.toFixed(2)} l/h @ 10 bar</div>
-        </div>
-      </label>`).join('');
-
-  // Table
-  const bars=[3,5,7,10,15,20,25,30,35];
-  document.getElementById('nozzle-thead').innerHTML=
-    `<tr style="background:#1a1a18"><th style="padding:6px 9px;color:rgba(255,255,255,.6);font-weight:500;text-align:left">Druk</th>`+
-    Object.entries(NOZZLES).map(([k,n])=>
-      `<th style="padding:6px 9px;color:rgba(255,255,255,.6);font-weight:500;text-align:center">${n.lbl}</th>`+
-      `<th style="padding:6px 9px;color:rgba(255,255,255,.6);font-weight:500;text-align:center">${S.NR}× ${n.lbl}</th>`
-    ).join('')+'</tr>';
-
-  document.getElementById('nozzle-tbody').innerHTML=bars.map(bar=>{
-    const isP1=bar===S.P1, isP2=bar===S.P2;
-    const hl=isP1||isP2?'background:#E1F5EE':'';
-    const mark=isP1?' ←R1':isP2?' ←R2':'';
-    return `<tr style="${hl}">
-      <td style="padding:5px 9px;border-bottom:1px solid #f2f0ea;font-weight:600">${bar} bar${mark}</td>`+
-      Object.keys(NOZZLES).map(k=>{
-        const q=nozzleQ(k,bar);
-        return `<td style="padding:5px 9px;border-bottom:1px solid #f2f0ea;text-align:center">${q.toFixed(2)}</td>`+
-               `<td style="padding:5px 9px;border-bottom:1px solid #f2f0ea;text-align:center">${(S.NR*q).toFixed(1)}</td>`;
-      }).join('')+
-    '</tr>';
-  }).join('');
-
-  document.getElementById('r-nozzle-result').innerHTML=
-    mc('Ring 1 ('+S.P1+' bar)',r1(c.wR1),'l/h ('+S.NR+'×'+r2(c.f1)+')','') +
-    mc('Ring 2 ('+S.P2+' bar)',r1(c.wR2),'l/h ('+S.NR+'×'+r2(c.f2)+')','') +
-    mc('Totaal nozzles',r1(c.wTot),'l/h per toren','hi');
-
-  document.getElementById('r-nozzle-balans').innerHTML=
-    mc('Ingesteld water',S.water,'l/h','')+
-    mc('Verdampt',(S.water*S.eta/100).toFixed(1),'l/h','ok')+
-    mc('Druppelval',(S.water*(1-S.eta/100)).toFixed(1),'l/h','wn')+
-    mc('Netto kW',r1(c.Qnet),'kW','hi');
-}
-
-function onNozzle(k){ S.nozzle=k; renderAll(); }
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER VD-MATRIX
-// ═══════════════════════════════════════════════════════════════
-function renderVD(){
-  const temps=[18,20,22,24,26,28,30,32,34,36,38];
-  const rvs=[95,90,85,80,75,70,65,60,55,50,45,40];
-  let h=`<thead><tr><th style="padding:5px 7px;background:#1a1a18;color:rgba(255,255,255,.5);font-weight:500">T\\ RV</th>`;
-  rvs.forEach(r=>h+=`<th style="padding:5px 7px;background:#1a1a18;color:rgba(255,255,255,.5);font-weight:500;text-align:center">${r}%</th>`);
-  h+='</tr></thead><tbody>';
-  temps.forEach(T=>{
-    h+=`<tr><td style="padding:5px 7px;font-weight:700;color:#888;background:#f8f6f0">${T}°C</td>`;
-    rvs.forEach(rv=>{
-      const vd=satH(T)*(1-rv/100);
-      let cls;
-      if(vd<S.vdMin) cls='vd-ok';
-      else if(vd<=S.vdMax) cls='vd-gd';
-      else if(vd<=10) cls='vd-wn';
-      else if(vd<=14) cls='vd-bd';
-      else cls='vd-xx';
-      h+=`<td class="${cls}">${vd.toFixed(1)}</td>`;
-    });
-    h+='</tr>';
-  });
-  h+='</tbody>';
-  document.getElementById('vd-matrix').innerHTML=h;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MASTER RENDER
-// ═══════════════════════════════════════════════════════════════
-function renderAll(){
-  const c=compute();
-  renderGeometrie(c);
-  renderPerformance(c);
-  renderDubbel(c);
-  renderHectare(c);
-  renderNozzles(c);
-  renderVD();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TABS
-// ═══════════════════════════════════════════════════════════════
-function initTabs(){
-  document.querySelectorAll('.nb').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('act'));
-      document.querySelectorAll('.tp').forEach(p=>p.classList.remove('act'));
-      btn.classList.add('act');
-      document.getElementById('tab-'+btn.dataset.tab).classList.add('act');
-    });
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('ft-ts').textContent=
-    new Date().toLocaleDateString('nl-NL',{year:'numeric',month:'long',day:'numeric'});
-
-  buildGeomInputs();
-  buildSliders('klimaat','sl-klimaat');
-  buildSliders('water','sl-water');
-  buildSliders('ha','sl-ha');
-  buildSliders('nozzle','sl-nozzle');
-  buildSliders('vd','sl-vd');
-  initTabs();
-  renderAll();
-});
-</script>
+<footer>
+  <div class="ftr">
+    <span>Catava Air BV — Dynamisch Torensimulator v3</span>
+    <span id="ft-geom"></span>
+    <span id="ft-ts"></span>
+  </div>
+</footer>
+
+<script src="model.js"></script>
 </body>
 </html>
