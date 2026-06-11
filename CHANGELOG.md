@@ -1,4 +1,4 @@
-[CHANGELOG.md](https://github.com/user-attachments/files/28842858/CHANGELOG.md)
+[CHANGELOG.md](https://github.com/user-attachments/files/28843314/CHANGELOG.md)
 # Changelog
 
 Alle noemenswaardige wijzigingen worden in dit bestand bijgehouden.
