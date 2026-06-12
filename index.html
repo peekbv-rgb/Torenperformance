@@ -1961,6 +1961,7 @@ function initTabs() {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
+// ── Enige DOMContentLoaded handler ─────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ft-ts').textContent =
     new Date().toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1972,6 +1973,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildSliders('nozzle',  'sl-nozzle');
   buildSliders('vd',      'sl-vd');
   initTabs();
+  buildRingConfig();
   renderAll();
 });
 
@@ -2261,27 +2263,28 @@ function renderPerformance(c) {
 
 // ── Override renderAll ──────────────────────────────────────────────────────
 function renderAll() {
-  // Sync S.water with active rings so hectare/nozzle tabs stay consistent
   const wActive = activeWater();
   S.water = wActive > 0 ? parseFloat(wActive.toFixed(1)) : S.water;
-  const c = compute();
-  renderGeometrie(c);
-  renderPerformance(c);
-  renderDubbel(c);
-  renderHectare(c);
-  renderNozzles(c);
-  renderVD();
-  buildRingConfig();
-  renderLuchtaanzuiging();
+  let c;
+  try { c = compute(); } catch(e) { console.error('compute failed:', e); return; }
+  const steps = [
+    ['renderGeometrie',      ()=>renderGeometrie(c)],
+    ['renderPerformance',    ()=>renderPerformance(c)],
+    ['renderDubbel',         ()=>renderDubbel(c)],
+    ['renderHectare',        ()=>renderHectare(c)],
+    ['renderNozzles',        ()=>renderNozzles(c)],
+    ['renderVD',             ()=>renderVD()],
+    ['buildRingConfig',      ()=>buildRingConfig()],
+    ['renderLuchtaanzuiging',()=>renderLuchtaanzuiging()],
+  ];
+  steps.forEach(([name, fn]) => {
+    try { fn(); }
+    catch(e) { console.error('FAIL in ' + name + ':', e.message, e.stack); }
+  });
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(() => {
-    buildRingConfig();
-    renderLuchtaanzuiging();
-  }, 80);
-});
+
 
 </script>
 </body>
