@@ -1,17 +1,16 @@
-[README.md](https://github.com/user-attachments/files/28843344/README.md)
-# Catava Air — Dynamisch Torensimulator v3
+# Catyra Air — Dynamisch Torensimulator v3
 
-> Interactief fysisch rekenmodel voor de **Catava Air airsok** —  
+> Interactief fysisch rekenmodel voor de **Catyra Air airsok** —  
 > een katabatische adiabatische koeltoren voor glastuinbouw.
 
-[![Deploy to GitHub Pages](https://github.com/catava-air/torensimulator/actions/workflows/deploy.yml/badge.svg)](https://github.com/catava-air/torensimulator/actions/workflows/deploy.yml)
+[![Deploy to GitHub Pages](https://github.com/catyra-air/torensimulator/actions/workflows/deploy.yml/badge.svg)](https://github.com/catyra-air/torensimulator/actions/workflows/deploy.yml)
 
 ---
 
 ## Live demo
 
 ```
-https://<jouw-account>.github.io/catava-simulator/
+https://<jouw-account>.github.io/catyra-simulator/
 ```
 
 ---
@@ -20,8 +19,8 @@ https://<jouw-account>.github.io/catava-simulator/
 
 ```bash
 # 1. Clone
-git clone https://github.com/<jouw-account>/catava-simulator.git
-cd catava-simulator
+git clone https://github.com/<jouw-account>/catyra-simulator.git
+cd catyra-simulator
 
 # 2. Open direct in browser — geen installatie nodig
 open index.html
@@ -39,7 +38,7 @@ python3 -m http.server 8080
 ## Projectstructuur
 
 ```
-catava-simulator/
+catyra-simulator/
 │
 ├── index.html                  # HTML-structuur en tabbladen
 ├── style.css                   # Volledige opmaak
@@ -158,7 +157,7 @@ npx browser-sync start --server --files "*.html, *.css, *.js"
 
 ## Bronnen
 
-- Ontwerptekening airsok Catava/Catyra BV (december 2025)
+- Ontwerptekening airsok Catyra BV (december 2025)
 - Kickoff-presentatie 'Maak-BV' (18 december 2025)
 - CoolFlow validatierapport (december 2025)
 - Nozzle specs: KBN-serie, fabricage Japan (Ten Cate KA-10/KA-46)
@@ -167,5 +166,5 @@ npx browser-sync start --server --files "*.html, *.css, *.js"
 
 ## Licentie
 
-Intern gebruik Catava Air BV.  
+Intern gebruik Catyra BV.  
 Niet voor externe distributie zonder toestemming.
