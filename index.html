@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catava Air — Dynamisch Torensimulator v3</title>
+  <title>Catyra Air — Dynamisch Torensimulator v3</title>
   <style>/* ═══════════════════════════════════════════════════════════════
-   Catava Air Torensimulator v3 — Stylesheet
+   Catyra Air Torensimulator v3 — Stylesheet
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -435,6 +435,85 @@ footer {
   flex-wrap: wrap;
   gap: .3rem;
 }
+
+/* ── OVERRIDE: verbeterde geometry invoervelden ── */
+.ni-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: .65rem;
+}
+.ni-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--r);
+  padding: .6rem .8rem;
+  transition: border-color .15s, background .15s;
+}
+.ni-wrap:focus-within {
+  border-color: var(--green);
+  background: var(--green-lt);
+}
+.ni-wrap label {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.ni-wrap input[type=number] {
+  width: 100%;
+  padding: 3px 0;
+  border: none;
+  border-bottom: 2px solid var(--gray-300);
+  border-radius: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  background: transparent;
+  -moz-appearance: textfield;
+}
+.ni-wrap input[type=number]::-webkit-outer-spin-button,
+.ni-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+.ni-wrap input[type=number]:focus { outline: none; border-bottom-color: var(--green); }
+.ni-unit { font-size: .68rem; font-weight: 700; color: var(--green); margin-top: 1px; }
+/* Ring toggle buttons */
+.ring-toggles { display: flex; gap: .4rem; flex-wrap: wrap; }
+.ring-btn {
+  padding: 5px 14px; border-radius: 20px;
+  border: 1.5px solid var(--gray-300); background: var(--white);
+  font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .15s; color: var(--gray-700);
+}
+.ring-btn.on  { background: var(--green);  border-color: var(--green);  color: #fff; }
+.ring-btn.off { background: var(--red-lt); border-color: #f7c1c1; color: var(--red); }
+.nozzle-pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .5rem; }
+.nozzle-pill {
+  padding: 4px 12px; border-radius: 20px; border: 1.5px solid var(--gray-300);
+  background: var(--white); font-size: .72rem; font-weight: 600; cursor: pointer;
+  transition: all .15s; color: var(--gray-700);
+}
+.nozzle-pill.sel { background: var(--amber); border-color: var(--amber); color: #fff; }
+.flow-result {
+  background: var(--gray-900); border-radius: var(--r-lg);
+  padding: 1rem 1.1rem; color: rgba(255,255,255,.85);
+}
+.flow-result h3 {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--green); margin-bottom: .75rem;
+}
+.flow-big  { font-size: 2.4rem; font-weight: 700; color: var(--green); line-height: 1; }
+.flow-unit { font-size: .8rem; color: rgba(255,255,255,.45); margin-top: 3px; }
+.flow-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .75rem; }
+.flow-item { background: rgba(255,255,255,.06); border-radius: var(--r); padding: .5rem .7rem; }
+.flow-item-lbl { font-size: .65rem; color: rgba(255,255,255,.4); margin-bottom: 2px; }
+.flow-item-val { font-size: .95rem; font-weight: 700; color: rgba(255,255,255,.9); }
+.flow-item-uni { font-size: .62rem; color: rgba(255,255,255,.35); }
+.cond-bar { margin-top: .75rem; padding: .6rem .8rem; border-radius: var(--r); font-size: .75rem; font-weight: 600; }
+.cond-ok  { background: rgba(29,158,117,.2);  color: #6EDDB8; }
+.cond-wn  { background: rgba(186,117,23,.2);  color: #F5C76A; }
+.cond-er  { background: rgba(163,45,45,.2);   color: #F5A0A0; }
 </style>
 </head>
 <body>
@@ -452,7 +531,7 @@ footer {
         <ellipse cx="15" cy="25" rx="9" ry="3.5" fill="#1D9E75" opacity=".35"/>
       </svg>
       <div>
-        <div class="logo-name">Catava Air</div>
+        <div class="logo-name">Catyra Air</div>
         <div class="logo-sub">Dynamisch Torensimulator v3</div>
       </div>
     </div>
@@ -501,24 +580,38 @@ footer {
   <section id="tab-performance" class="tp">
     <div class="grid2">
       <div class="col">
+
         <div class="card">
-          <h2>Klimaatinvoer</h2>
+          <h2>Ruimtecondities</h2>
           <div class="sg" id="sl-klimaat"></div>
         </div>
+
         <div class="card">
-          <h2>Waterinvoer</h2>
-          <div class="sg" id="sl-water"></div>
+          <h2>Ringen &amp; nozzles</h2>
+          <p class="prose" style="margin-bottom:.6rem">Schakel per ring aan/uit, selecteer nozzle-type, stel het aantal en de werkdruk in.</p>
+          <div id="ring-config"></div>
         </div>
+
       </div>
       <div class="col">
-        <div class="stitle">Kernresultaten per toren</div>
+
+        <div class="flow-result">
+          <h3>Luchtaanzuiging per toren</h3>
+          <div class="flow-big" id="flow-val">—</div>
+          <div class="flow-unit">m³/h aangetrokken lucht</div>
+          <div class="flow-grid" id="flow-grid"></div>
+          <div class="cond-bar cond-ok" id="flow-cond"></div>
+        </div>
+
+        <div class="stitle" style="margin-top:.9rem">Waterbalans per toren</div>
         <div class="grid4" id="r-perf-main"></div>
         <div class="fbox" id="r-perf-formula" style="margin-top:.75rem"></div>
-        <div class="stitle" style="margin-top:1rem">Venturi-analyse</div>
+        <div class="stitle" style="margin-top:1rem">Venturi-snelheden</div>
         <div class="grid4" id="r-venturi"></div>
         <div class="cw" style="margin-top:.75rem">
           <canvas id="cvs-venturi" width="460" height="240"></canvas>
         </div>
+
       </div>
     </div>
   </section>
@@ -650,18 +743,18 @@ footer {
 
 <footer>
   <div class="ftr">
-    <span>Catava Air BV — Dynamisch Torensimulator v3</span>
+    <span>Catyra BV — Dynamisch Torensimulator v3</span>
     <span id="ft-geom"></span>
     <span id="ft-ts"></span>
   </div>
 </footer>
 
 <script>/**
- * Catava Air — Torensimulator v3
+ * Catyra Air — Torensimulator v3
  * Fysisch model: koeling · Venturi · nozzles · VD-matrix · hectare · 2-toren visualisatie
  *
  * Bronnen:
- *   - Ontwerptekening airsok Catava/Catyra BV (december 2025)
+ *   - Ontwerptekening airsok Catyra BV (december 2025)
  *   - Kickoff-presentatie 'Maak-BV' (18 december 2025)
  *   - CoolFlow validatierapport (december 2025)
  *   - Nozzle specs: KBN-serie, fabricage Japan
@@ -1622,6 +1715,257 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   renderAll();
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// RING & NOZZLE SYSTEEM — 3 ringen, elk eigen nozzle + druk
+// ═══════════════════════════════════════════════════════════════
+
+/** Totaal actief water [l/h] op basis van ring-state */
+function activeWater() {
+  return RINGS.reduce((sum, r) => {
+    if (!r.on) return sum;
+    return sum + r.nr * nozzleQ(r.nozzle, r.bar);
+  }, 0);
+}
+
+/** Bouw de volledige ring-config UI */
+function buildRingConfig() {
+  const el = document.getElementById('ring-config');
+  if (!el) return;
+
+  el.innerHTML = RINGS.map((r, i) => {
+    const q    = nozzleQ(r.nozzle, r.bar);
+    const flow = (r.nr * q).toFixed(1);
+    const borderCol = r.on ? 'var(--green)' : '#f7c1c1';
+    const bgCol     = r.on ? 'var(--green-pal)' : 'var(--red-lt)';
+
+    return `
+    <div style="background:${bgCol};border:1.5px solid ${borderCol};border-radius:var(--r);padding:.7rem .9rem;margin-bottom:.5rem">
+
+      <!-- Header rij -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <span style="font-size:.82rem;font-weight:700;color:var(--gray-900)">${r.lbl}</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span style="font-size:.72rem;font-weight:600;color:${r.on ? 'var(--green-dk)' : 'var(--red)'}">
+            ${r.on ? flow + ' l/h actief' : '0 l/h — uit'}
+          </span>
+          <button class="ring-btn ${r.on ? 'on' : 'off'}" onclick="toggleRing(${i})">
+            ${r.on ? '● AAN' : '○ UIT'}
+          </button>
+        </div>
+      </div>
+
+      <!-- Nozzle type pills -->
+      <div style="margin-bottom:.5rem">
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:3px">Nozzle type</div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+          ${Object.entries(NOZZLES).map(([k, n]) =>
+            `<span class="nozzle-pill ${r.nozzle === k ? 'sel' : ''}"
+                   onclick="setRingNozzle(${i},'${k}')"
+                   title="${n.desc}">
+               ${n.lbl}
+             </span>`
+          ).join('')}
+        </div>
+        <div style="font-size:.68rem;color:var(--gray-500);margin-top:3px">
+          ${NOZZLES[r.nozzle].qRef.toFixed(2)} l/h/nozzle @ 10 bar — ${NOZZLES[r.nozzle].desc}
+        </div>
+      </div>
+
+      <!-- Sliders: nozzle-aantal + druk -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:3px">Nozzles</div>
+          <div class="sr" style="gap:6px">
+            <input type="range" min="1" max="20" step="1" value="${r.nr}"
+                   oninput="setRingNR(${i},this.value)" style="flex:1;accent-color:var(--green)">
+            <span style="font-size:.8rem;font-weight:700;min-width:36px;text-align:right">${r.nr} st.</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:3px">Druk</div>
+          <div class="sr" style="gap:6px">
+            <input type="range" min="3" max="35" step="1" value="${r.bar}"
+                   oninput="setRingBar(${i},this.value)" style="flex:1;accent-color:var(--green)">
+            <span style="font-size:.8rem;font-weight:700;min-width:44px;text-align:right">${r.bar} bar</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-nozzle flow tabel bij huidige druk -->
+      <div style="margin-top:.5rem;background:rgba(0,0,0,.05);border-radius:4px;padding:.4rem .6rem;font-size:.7rem">
+        ${Object.entries(NOZZLES).map(([k,n]) => {
+          const qk = nozzleQ(k, r.bar);
+          return `<span style="margin-right:1rem;color:${r.nozzle===k?'var(--green-dk)':'var(--gray-500)'};font-weight:${r.nozzle===k?700:400}">
+            ${n.lbl}: ${qk.toFixed(2)} l/h/nozzle → ${(r.nr*qk).toFixed(1)} l/h ring
+          </span>`;
+        }).join('')}
+      </div>
+
+    </div>`;
+  }).join('');
+}
+
+function toggleRing(i) {
+  RINGS[i].on = !RINGS[i].on;
+  buildRingConfig();
+  renderLuchtaanzuiging(compute());
+  renderPerformance(compute());
+}
+
+function setRingNozzle(i, type) {
+  RINGS[i].nozzle = type;
+  buildRingConfig();
+  renderLuchtaanzuiging(compute());
+  renderPerformance(compute());
+}
+
+function setRingNR(i, val) {
+  RINGS[i].nr = +val;
+  buildRingConfig();
+  renderLuchtaanzuiging(compute());
+  renderPerformance(compute());
+}
+
+function setRingBar(i, val) {
+  RINGS[i].bar = +val;
+  buildRingConfig();
+  renderLuchtaanzuiging(compute());
+  renderPerformance(compute());
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LUCHTAANZUIGING — stack-effect model (C=0.61 gevalideerd)
+// ═══════════════════════════════════════════════════════════════
+function computeLuchtaanzuiging() {
+  const Tin  = S.Tin;
+  const H    = totalH() / 1000;
+  const wAct = activeWater();
+
+  const eta  = S.eta / 100;
+  const Qact = (wAct / 3600) * HVAP * eta;
+  const dT_max = Qact > 0 ? Qact / (CP_AIR * 0.8) : 0;
+  const dT   = Math.min(S.dT, dT_max);
+  const Tout = Tin - dT;
+
+  // Stack-effect: v = C * sqrt(2gH * dT/Tk)
+  const C      = 0.61;
+  const Tk     = 273.15 + Tin;
+  const vStack = dT > 0 ? C * Math.sqrt(2 * 9.81 * H * (dT / Tk)) : 0;
+
+  const Athroat = Math.PI * (G.D_throat / 2000) ** 2;
+  const Vair_h  = vStack * Athroat * 3600;
+
+  const rhoIn  = 1.293 * (273.15 / (273.15 + Tin));
+  const rhoOut = 1.293 * (273.15 / (273.15 + Tout));
+
+  const vdIn  = calcVD(Tin, S.RV);
+  const vdOut = satH(Tout) * 0.05;
+
+  // Ring samenvatting
+  const ringSummary = RINGS.map(r => {
+    const q = nozzleQ(r.nozzle, r.bar);
+    const f = r.on ? r.nr * q : 0;
+    return `${r.lbl}: ${r.on ? f.toFixed(1)+' l/h' : 'uit'}`;
+  }).join(' | ');
+
+  let cond, condCls;
+  if (wAct === 0)       { cond = '⚠ Alle ringen uit — geen koeling actief';        condCls = 'cond-er'; }
+  else if (dT < 1)      { cond = '⚠ Te weinig ΔT — verhoog watertoevoer of druk';  condCls = 'cond-er'; }
+  else if (Vair_h > 6000) { cond = '✓ Optimale aanzuiging';                         condCls = 'cond-ok'; }
+  else if (Vair_h > 3000) { cond = '~ Goede aanzuiging';                            condCls = 'cond-ok'; }
+  else if (Vair_h > 1000) { cond = '~ Matige aanzuiging — verhoog druk of hoogte'; condCls = 'cond-wn'; }
+  else                  { cond = '⚠ Lage aanzuiging';                               condCls = 'cond-er'; }
+
+  return { vStack, Vair_h, wAct, Tout, dT, vdIn, vdOut, rhoIn, rhoOut, Qact, ringSummary, cond, condCls };
+}
+
+function renderLuchtaanzuiging() {
+  const la = computeLuchtaanzuiging();
+
+  const fv = document.getElementById('flow-val');
+  if (fv) fv.textContent = la.Vair_h > 0 ? Math.round(la.Vair_h).toLocaleString('nl-NL') : '—';
+
+  const fg = document.getElementById('flow-grid');
+  if (fg) fg.innerHTML = [
+    ['Aanzuigsnelheid keel',  la.vStack.toFixed(2),              'm/s'],
+    ['Actief water (alle ringen)', la.wAct.toFixed(1),           'l/h'],
+    ['Temperatuurdaling ΔT',  la.dT.toFixed(1),                 'K'],
+    ['Uitlaattemperatuur',    la.Tout.toFixed(1),                '°C'],
+    ['VD ruimte (inlaat)',    la.vdIn.toFixed(1),                'g/m³'],
+    ['VD uitlaat toren',      la.vdOut.toFixed(1),              'g/m³'],
+    ['ρ lucht inlaat',        la.rhoIn.toFixed(4),               'kg/m³'],
+    ['Koelvermogen actief',   la.Qact.toFixed(1),                'kW'],
+  ].map(([l,v,u]) => `
+    <div class="flow-item">
+      <div class="flow-item-lbl">${l}</div>
+      <div class="flow-item-val">${v}</div>
+      <div class="flow-item-uni">${u}</div>
+    </div>`).join('');
+
+  const fc = document.getElementById('flow-cond');
+  if (fc) { fc.className = 'cond-bar ' + la.condCls; fc.textContent = la.cond; }
+}
+
+// ── Override renderPerformance to use activeWater() ─────────────────────────
+const _origRenderPerf = renderPerformance;
+function renderPerformance(c) {
+  const wAct = activeWater();
+  // Recalc with active water
+  const eta   = S.eta / 100;
+  const Qmax2 = (wAct / 3600) * HVAP;
+  const Qnet2 = Qmax2 * eta;
+  const mAir2 = Qnet2 > 0 ? Qnet2 / (CP_AIR * S.dT) : 0;
+  const Vairh2 = mAir2 / RHO * 3600;
+
+  const rMain = document.getElementById('r-perf-main');
+  if (rMain) rMain.innerHTML =
+    mc('Actief water',      wAct.toFixed(1),           'l/h (ringen actief)', '') +
+    mc('Ringen aan',        RINGS.filter(r=>r.on).length, 'van 3', '') +
+    mc('Koelvermogen netto', Qnet2.toFixed(1),          'kW', 'hi') +
+    mc('Luchtdebiet',       Math.round(Vairh2),         'm³/h', 'hi') +
+    mc('Uitlaattemp.',      (S.Tin - S.dT).toFixed(1), '°C', 'ok') +
+    mc('VD inlaat',         calcVD(S.Tin, S.RV).toFixed(1), 'g/m³', '');
+
+  const rFormula = document.getElementById('r-perf-formula');
+  if (rFormula) rFormula.innerHTML =
+    `Actief water: ${wAct.toFixed(1)} l/h  |  Q = ${Qnet2.toFixed(1)} kW  |  V = ${Math.round(Vairh2)} m³/h`;
+
+  // Still draw venturi chart
+  drawVenturiChart(c);
+
+  const rVen = document.getElementById('r-venturi');
+  if (rVen) rVen.innerHTML =
+    mc('v boven Ø'+G.D_top,   r2(c.v1), 'm/s', '') +
+    mc('v keel Ø'+G.D_throat, r2(c.v2), 'm/s', 'wn') +
+    mc('v tussen Ø'+G.D_mid,  r2(c.v3), 'm/s', '') +
+    mc('v onder Ø'+G.D_bot,   r2(c.v4), 'm/s', '') +
+    mc('Versnelling', r2(c.v2/c.v1)+'×', 'keel/boven', 'hi') +
+    mc('ΔP Bernoulli', r2(c.dP_mbar), 'mbar', 'hi');
+}
+
+// ── Override renderAll ──────────────────────────────────────────────────────
+function renderAll() {
+  const c = compute();
+  renderGeometrie(c);
+  renderPerformance(c);
+  renderDubbel(c);
+  renderHectare(c);
+  renderNozzles(c);
+  renderVD();
+  buildRingConfig();
+  renderLuchtaanzuiging();
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    buildRingConfig();
+    renderLuchtaanzuiging();
+  }, 80);
+});
+
 </script>
 </body>
 </html>
