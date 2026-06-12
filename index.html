@@ -515,7 +515,6 @@ footer {
 .cond-wn  { background: rgba(186,117,23,.2);  color: #F5C76A; }
 .cond-er  { background: rgba(163,45,45,.2);   color: #F5A0A0; }
 
-/* ── Ring & flow UI ── */
 .ring-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--gray-300);background:var(--white);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--gray-700);}
 .ring-btn.on{background:var(--green);border-color:var(--green);color:#fff;}
 .ring-btn.off{background:var(--red-lt);border-color:#f7c1c1;color:var(--red);}
@@ -534,7 +533,6 @@ footer {
 .cond-ok{background:rgba(29,158,117,.2);color:#6EDDB8;}
 .cond-wn{background:rgba(186,117,23,.2);color:#F5C76A;}
 .cond-er{background:rgba(163,45,45,.2);color:#F5A0A0;}
-/* Geometry inputs */
 .ni-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.65rem;}
 .ni-wrap{display:flex;flex-direction:column;gap:4px;background:var(--gray-100);border:1.5px solid var(--gray-300);border-radius:var(--r);padding:.6rem .8rem;transition:border-color .15s,background .15s;}
 .ni-wrap:focus-within{border-color:var(--green);background:var(--green-lt);}
@@ -614,8 +612,8 @@ footer {
           <div class="sg" id="sl-klimaat"></div>
         </div>
         <div class="card">
-          <h2>Ringen &amp; nozzles</h2>
-          <p class="prose" style="margin-bottom:.5rem">3 ringen, elk met eigen nozzle-type, aantal en druk. Aan/uit per ring.</p>
+          <h2>Ringen &amp; nozzles — 3 ringen</h2>
+          <p class="prose" style="margin-bottom:.5rem">Schakel per ring aan/uit. Kies nozzle-type, aantal en druk onafhankelijk per ring.</p>
           <div id="ring-config"></div>
         </div>
       </div>
@@ -649,14 +647,13 @@ footer {
           <h2>Afstand tussen torens</h2>
           <div class="spacing-ctrl">
             <label>Hart-op-hart afstand</label>
-            <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10"
-                   oninput="onSpacing(this.value)">
+            <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10" oninput="onSpacing(this.value)">
             <span class="sv" id="sv-spacing">10,0 m</span>
           </div>
           <div class="grid4" id="r-dubbel-cards" style="margin-top:.5rem"></div>
         </div>
         <div class="card">
-          <h2>Klimaat op 1,30 m hoogte — middenin</h2>
+          <h2>Klimaat op 1,30 m — middenin</h2>
           <div class="grid4" id="r-dubbel-klimaat" style="margin-top:.5rem"></div>
         </div>
         <div class="card">
@@ -665,18 +662,18 @@ footer {
         </div>
       </div>
       <div class="col">
-        <div class="stitle">RV-profiel per hoogte — langs de toren-as</div>
-        <div class="cw"><canvas id="cvs-hoogte-profiel" width="520" height="200"></canvas></div>
-        <div style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.4rem .75rem;font-size:.72rem;color:var(--gray-500)">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:3px;background:#EF9F27;display:inline-block"></span>1,30 m (gewas)</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:2px;background:#1D9E75;border-top:2px dashed #1D9E75;display:inline-block"></span>andere hoogtes</span>
+        <div class="stitle">RV-profiel op meerdere hoogtes — langs de toren-as</div>
+        <div class="cw"><canvas id="cvs-hoogte-profiel" width="520" height="210"></canvas></div>
+        <div style="display:flex;flex-wrap:wrap;gap:.6rem;padding:.35rem .75rem;font-size:.72rem;color:var(--gray-500)">
+          <span><span style="display:inline-block;width:18px;height:3px;background:#EF9F27;vertical-align:middle;margin-right:3px"></span>1,30 m gewashoogte</span>
+          <span style="color:var(--gray-300)">0 / 0,5 / 1,0 / 2,0 / 3,0 / 4,0 m gestippeld</span>
         </div>
-        <div class="stitle" style="margin-top:.6rem">Temperatuurprofiel per hoogte — langs de toren-as</div>
-        <div class="cw"><canvas id="cvs-temp-profiel" width="520" height="200"></canvas></div>
+        <div class="stitle" style="margin-top:.6rem">Temperatuurprofiel op meerdere hoogtes — langs de toren-as</div>
+        <div class="cw"><canvas id="cvs-temp-profiel" width="520" height="210"></canvas></div>
         <div class="stitle" style="margin-top:.6rem">Bovenaanzicht — invloedszones</div>
         <div class="cw"><canvas id="cvs-dubbel-top" width="520" height="240"></canvas></div>
         <div class="stitle" style="margin-top:.6rem">Zijaanzicht — op schaal</div>
-        <div class="cw"><canvas id="cvs-dubbel-side" width="520" height="180"></canvas></div>
+        <div class="cw"><canvas id="cvs-dubbel-side" width="520" height="175"></canvas></div>
       </div>
     </div>
   </section>
@@ -810,17 +807,6 @@ const NOZZLES = {
   '80063': { lbl: 'KBN 80063', qRef: 3.78,  desc: '0,063 L/min — ultra-fijne VD-sturing' },
 };
 
-// ── 3 ringen — elk eigen nozzle, aantal, druk ────────────────────────────
-const RINGS = [
-  { id:'r1', lbl:'Ring 1', on:true,  nozzle:'80125', nr:8,  bar:20 },
-  { id:'r2', lbl:'Ring 2', on:true,  nozzle:'80125', nr:8,  bar:31 },
-  { id:'r3', lbl:'Ring 3', on:false, nozzle:'80063', nr:6,  bar:15 },
-];
-
-function activeWater() {
-  return RINGS.reduce((sum,r) => sum + (r.on ? r.nr * nozzleQ(r.nozzle, r.bar) : 0), 0);
-}
-
 /** Debiet per nozzle [l/h] bij gegeven druk [bar] */
 function nozzleQ(type, bar) {
   return NOZZLES[type].qRef * Math.sqrt(bar / 10);
@@ -891,44 +877,6 @@ function r2(v) { return Math.round(v * 100) / 100; }
 // ═══════════════════════════════════════════════════════════════
 // KERN BEREKENING
 // ═══════════════════════════════════════════════════════════════
-function compute() {
-  const wAct = activeWater();
-  const eta  = S.eta / 100;
-  const Qmax = (wAct / 3600) * HVAP;
-  const Qnet = Qmax * eta;
-  // Iterative dT using stack effect
-  const H = totalH()/1000;
-  const At = Math.PI*(G.D_throat/2000)**2;
-  const C=0.61, g=9.81, Tk=273.15+S.Tin;
-  let dT=S.dT;
-  for(let i=0;i<20;i++){
-    const v=C*Math.sqrt(2*g*H*Math.max(0,dT)/Tk);
-    const m=v*At*RHO;
-    const d=m>0?Qnet/(m*CP_AIR):0;
-    if(Math.abs(d-dT)<0.01){dT=d;break;}
-    dT=dT*0.5+d*0.5;
-  }
-  dT=Math.max(0,Math.min(dT,25));
-  const vStack=dT>0.05?C*Math.sqrt(2*g*H*dT/Tk):0;
-  const Vair=vStack*At;
-  const Vairh=Vair*3600;
-  const mAir=Vair*RHO;
-  const Tout=S.Tin-dT;
-  const a1=A(G.D_top),a2=A(G.D_throat),a3=A(G.D_mid),a4=A(G.D_bot);
-  const v1=Vair>0?Vair/a1:0,v2=Vair>0?Vair/a2:0,v3=Vair>0?Vair/a3:0,v4=Vair>0?Vair/a4:0;
-  const dP_mbar=0.5*RHO*(v2**2-v1**2)/100;
-  const verblijf=Vair>0?(H/((v1+v2+v3+v4)/4)):0;
-  const vdIn=calcVD(S.Tin,S.RV);
-  const vdOut=satH(Tout)*0.03;
-  const moistAdd=Vairh>0?(wAct*eta)/Vairh:0;
-  const f1=nozzleQ(S.nozzle,S.P1),f2=nozzleQ(S.nozzle,S.P2);
-  const wR1=S.NR*f1,wR2=S.NR*f2,wTot=wR1+wR2;
-  const m2=10000/S.NT,radius=Math.sqrt(m2/Math.PI),hoh=Math.sqrt(m2);
-  S.water=parseFloat(wAct.toFixed(1));
-  return {eta,wAct,Qmax,Qnet,mAir,Vairh,Tout,dT,
-          a1,a2,a3,a4,v1,v2,v3,v4,dP_mbar,verblijf,
-          vdIn,vdOut,moistAdd,f1,f2,wR1,wR2,wTot,m2,radius,hoh};
-}
 
 // ═══════════════════════════════════════════════════════════════
 // HTML HELPER — metric card
@@ -946,7 +894,7 @@ function mc(lbl, val, unit, cls) {
 // ═══════════════════════════════════════════════════════════════
 const SLIDER_DEFS = {
   klimaat: [
-    { id: 'Tin',  lbl: 'Aanzuigtemperatuur',      min: 20, max: 45,  step: 1, fmt: v => v + ' °C' },
+    { id: 'Tin',  lbl: 'Buitentemperatuur',      min: 20, max: 45,  step: 1, fmt: v => v + ' °C' },
     { id: 'RV',   lbl: 'Relatieve vochtigheid',   min: 10, max: 90,  step: 5, fmt: v => v + ' %' },
     { id: 'dT',   lbl: 'Doelkoeling ΔT',          min: 3,  max: 15,  step: 1, fmt: v => v + ' K' },
     { id: 'eta',  lbl: 'Verdampingsrendement',     min: 50, max: 100, step: 5, fmt: v => v + ' %' },
@@ -1056,42 +1004,6 @@ function renderGeometrie(c) {
 // ═══════════════════════════════════════════════════════════════
 // RENDER — 2 TORENS TAB
 // ═══════════════════════════════════════════════════════════════
-function renderDubbel(c) {
-  const spacing = S.spacing;
-  const radius  = c.radius;
-  const overlap = Math.max(0, radius * 2 - spacing);
-  const pct     = overlap > 0 ? Math.round(overlap / (radius * 2) * 100) : 0;
-
-  document.getElementById('r-dubbel-cards').innerHTML =
-    mc('Hart-op-hart', spacing, 'm', '') +
-    mc('Invloedsstraal', r1(radius), 'm / toren', 'hi') +
-    mc('Overlap', overlap > 0 ? r1(overlap) : 0, 'm', overlap > 0 ? 'wn' : 'ok') +
-    mc('Overlap %', pct, '%', pct > 50 ? 'wn' : '');
-
-  document.getElementById('r-dubbel-zone').innerHTML =
-    mc('2× koelvermogen', r1(c.Qnet * 2), 'kW', '') +
-    mc('2× luchtdebiet',  Math.round(c.Vairh * 2), 'm³/h', '') +
-    mc('Overlapping', overlap > 0 ? 'Versterking' : 'Geen', overlap > 0 ? `+${pct}%` : 'onafhankelijk', overlap > 0 ? 'ok' : '');
-
-  // Klimaat middenin op 1.30m
-  const la=computeLuchtaanzuiging();
-  const rv130=Math.min(99,la.RVin+Math.min(50,la.moistAdd*8)*0.65);
-  const vd130=calcVD(la.Tout,rv130);
-  const t130=la.Tout+(la.Tin-la.Tout)*0.3;
-  const rdk=document.getElementById('r-dubbel-klimaat');
-  if(rdk) rdk.innerHTML=
-    mc('RV inkomend',r1(la.RVin),'%','')+
-    mc('RV middenin 1,30m',r1(rv130),'%',rv130>70?'ok':'wn')+
-    mc('Temp. middenin',r1(t130),'°C','')+
-    mc('VD middenin',r1(vd130),'g/m³',vd130<8?'ok':vd130<10?'wn':'er')+
-    mc('VD reductie',r1(calcVD(la.Tin,la.RVin)-vd130),'g/m³ minder','hi')+
-    mc('ΔT bereikt',r1(la.dT),'K koeling','');
-
-  drawHoogteProfiel(c, spacing, radius);
-  drawTempProfiel(c, spacing, radius);
-  drawDubbelTop(c, spacing, radius);
-  drawDubbelSide(c, spacing);
-}
 
 // ═══════════════════════════════════════════════════════════════
 // RENDER — HECTARE TAB
@@ -1709,6 +1621,410 @@ function initTabs() {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
+t.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ft-ts').textContent =
+    new Date().toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  buildGeomInputs();
+  buildSliders('klimaat', 'sl-klimaat');
+  buildSliders('water',   'sl-water');
+  buildSliders('ha',      'sl-ha');
+  buildSliders('nozzle',  'sl-nozzle');
+  buildSliders('vd',      'sl-vd');
+  initTabs();
+  renderAll();
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// RING & NOZZLE SYSTEEM — 3 ringen, elk eigen nozzle + druk
+// ═══════════════════════════════════════════════════════════════
+
+/** Totaal actief water [l/h] op basis van ring-state */
+
+/** Bouw de volledige ring-config UI */
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// LUCHTAANZUIGING — stack-effect model (C=0.61 gevalideerd)
+// ═══════════════════════════════════════════════════════════════
+
+
+// ── Override renderPerformance to use activeWater() ─────────────────────────
+
+// ── Override renderAll ──────────────────────────────────────────────────────
+
+// ── Init ────────────────────────────────────────────────────────────────────
+t.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    buildRingConfig();
+    renderLuchtaanzuiging();
+  }, 80);
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTEN & RINGS
+// ═══════════════════════════════════════════════════════════════
+const RINGS = [
+  { id:'r1', lbl:'Ring 1', on:true,  nozzle:'80125', nr:8,  bar:20 },
+  { id:'r2', lbl:'Ring 2', on:true,  nozzle:'80125', nr:8,  bar:31 },
+  { id:'r3', lbl:'Ring 3', on:false, nozzle:'80063', nr:6,  bar:15 },
+];
+
+function activeWater() {
+  return RINGS.reduce((sum,r) => sum + (r.on ? r.nr * nozzleQ(r.nozzle, r.bar) : 0), 0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPUTE — gebruikt activeWater() als bron
+// ═══════════════════════════════════════════════════════════════
+function compute() {
+  const wAct = activeWater();
+  S.water = parseFloat(wAct.toFixed(1));
+  const eta = S.eta / 100;
+  const Qmax = (wAct / 3600) * HVAP;
+  const Qnet = Qmax * eta;
+  const H = totalH()/1000;
+  const At = Math.PI*(G.D_throat/2000)**2;
+  const C=0.61, g=9.81, Tk=273.15+S.Tin;
+  let dT=S.dT;
+  for(let i=0;i<20;i++){
+    const v=C*Math.sqrt(2*g*H*Math.max(0,dT)/Tk);
+    const m=v*At*RHO;
+    const d=m>0?Qnet/(m*CP_AIR):0;
+    if(Math.abs(d-dT)<0.01){dT=d;break;}
+    dT=dT*0.5+d*0.5;
+  }
+  dT=Math.max(0,Math.min(dT,25));
+  const vS=dT>0.05?C*Math.sqrt(2*g*H*dT/Tk):0;
+  const Vair=vS*At, Vairh=Vair*3600, mAir=Vair*RHO, Tout=S.Tin-dT;
+  const a1=A(G.D_top),a2=A(G.D_throat),a3=A(G.D_mid),a4=A(G.D_bot);
+  const v1=Vair>0?Vair/a1:0,v2=Vair>0?Vair/a2:0,v3=Vair>0?Vair/a3:0,v4=Vair>0?Vair/a4:0;
+  const dP_mbar=0.5*RHO*(v2**2-v1**2)/100;
+  const verblijf=Vair>0?(H/((v1+v2+v3+v4)/4)):0;
+  const vdIn=calcVD(S.Tin,S.RV), vdOut=satH(Tout)*0.03;
+  const moistAdd=Vairh>0?(wAct*eta)/Vairh:0;
+  const f1=nozzleQ(S.nozzle,S.P1),f2=nozzleQ(S.nozzle,S.P2);
+  const wR1=S.NR*f1,wR2=S.NR*f2,wTot=wR1+wR2;
+  const m2=10000/S.NT,radius=Math.sqrt(m2/Math.PI),hoh=Math.sqrt(m2);
+  return {eta,wAct,Qmax,Qnet,mAir,Vairh,Tout,dT,
+          a1,a2,a3,a4,v1,v2,v3,v4,dP_mbar,verblijf,
+          vdIn,vdOut,moistAdd,f1,f2,wR1,wR2,wTot,m2,radius,hoh};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER PERFORMANCE
+// ═══════════════════════════════════════════════════════════════
+function renderPerformance(c) {
+  const wAct=activeWater(), eta=S.eta/100;
+  const Qnet2=(wAct/3600)*HVAP*eta;
+  const mAir2=Qnet2>0?Qnet2/(CP_AIR*Math.max(0.1,c.dT)):0;
+  const rMain=document.getElementById('r-perf-main');
+  if(rMain) rMain.innerHTML=
+    mc('Actief water',wAct.toFixed(1),'l/h','')+
+    mc('Ringen aan',RINGS.filter(r=>r.on).length,'van 3','')+
+    mc('Koelvermogen',Qnet2.toFixed(1),'kW','hi')+
+    mc('Luchtdebiet',Math.round(c.Vairh),'m³/h','hi')+
+    mc('Uitlaattemp.',(S.Tin-c.dT).toFixed(1),'°C','ok')+
+    mc('VD inlaat',calcVD(S.Tin,S.RV).toFixed(1),'g/m³','');
+  const rFml=document.getElementById('r-perf-formula');
+  if(rFml) rFml.innerHTML=`Actief water: ${wAct.toFixed(1)} l/h | Q = ${Qnet2.toFixed(1)} kW | V = ${Math.round(c.Vairh)} m³/h`;
+  drawVenturiChart(c);
+  const rV=document.getElementById('r-venturi');
+  if(rV) rV.innerHTML=
+    mc('v boven Ø'+G.D_top,r2(c.v1),'m/s','')+
+    mc('v keel Ø'+G.D_throat,r2(c.v2),'m/s','wn')+
+    mc('v tussen Ø'+G.D_mid,r2(c.v3),'m/s','')+
+    mc('v onder Ø'+G.D_bot,r2(c.v4),'m/s','')+
+    mc('Versnelling',r2(c.v2/c.v1)+'×','keel/boven','hi')+
+    mc('ΔP',r2(c.dP_mbar),'mbar','hi');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll() {
+  const c=compute();
+  renderGeometrie(c);
+  renderPerformance(c);
+  renderDubbel(c);
+  renderHectare(c);
+  renderNozzles(c);
+  renderVD();
+  buildRingConfig();
+  renderLuchtaanzuiging();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RING CONFIGURATIE UI
+// ═══════════════════════════════════════════════════════════════
+function buildRingConfig() {
+  const el=document.getElementById('ring-config');
+  if(!el) return;
+  el.innerHTML=RINGS.map((r,i)=>{
+    const q=nozzleQ(r.nozzle,r.bar);
+    const flow=(r.nr*q).toFixed(1);
+    const bc=r.on?'var(--green)':'#f7c1c1';
+    const bg=r.on?'var(--green-pal)':'var(--red-lt)';
+    return `<div style="background:${bg};border:1.5px solid ${bc};border-radius:var(--r);padding:.7rem .9rem;margin-bottom:.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <span style="font-weight:700;font-size:.82rem">${r.lbl}</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span style="font-size:.72rem;font-weight:600;color:${r.on?'var(--green-dk)':'var(--red)'}">
+            ${r.on?flow+' l/h':'0 l/h — uit'}</span>
+          <button class="ring-btn ${r.on?'on':'off'}" onclick="toggleRing(${i})">${r.on?'● AAN':'○ UIT'}</button>
+        </div>
+      </div>
+      <div style="margin-bottom:.45rem">
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">Nozzle type</div>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+          ${Object.entries(NOZZLES).map(([k,n])=>`<span class="nozzle-pill ${r.nozzle===k?'sel':''}" onclick="setRingNozzle(${i},'${k}')" title="${n.desc}">${n.lbl}</span>`).join('')}
+        </div>
+        <div style="font-size:.68rem;color:var(--gray-500);margin-top:2px">${NOZZLES[r.nozzle].lbl}: ${q.toFixed(2)} l/h/nozzle @ ${r.bar} bar</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:2px">Nozzles</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="range" min="1" max="20" step="1" value="${r.nr}" oninput="setRingNR(${i},this.value)" style="flex:1;accent-color:var(--green)">
+            <span style="font-size:.82rem;font-weight:700;min-width:32px;text-align:right">${r.nr}</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:2px">Druk</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="range" min="3" max="35" step="1" value="${r.bar}" oninput="setRingBar(${i},this.value)" style="flex:1;accent-color:var(--green)">
+            <span style="font-size:.82rem;font-weight:700;min-width:40px;text-align:right">${r.bar} bar</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:.4rem;background:rgba(0,0,0,.05);border-radius:4px;padding:.35rem .6rem;font-size:.7rem">
+        ${Object.entries(NOZZLES).map(([k,n])=>{const qk=nozzleQ(k,r.bar);return `<span style="margin-right:.8rem;color:${r.nozzle===k?'var(--green-dk)':'var(--gray-500)'};font-weight:${r.nozzle===k?700:400}">${n.lbl}: ${qk.toFixed(2)} → ${(r.nr*qk).toFixed(1)} l/h</span>`;}).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRing(i){RINGS[i].on=!RINGS[i].on;buildRingConfig();renderLuchtaanzuiging();renderPerformance(compute());}
+function setRingNozzle(i,t){RINGS[i].nozzle=t;buildRingConfig();renderLuchtaanzuiging();renderPerformance(compute());}
+function setRingNR(i,v){RINGS[i].nr=+v;buildRingConfig();renderLuchtaanzuiging();renderPerformance(compute());}
+function setRingBar(i,v){RINGS[i].bar=+v;buildRingConfig();renderLuchtaanzuiging();renderPerformance(compute());}
+
+// ═══════════════════════════════════════════════════════════════
+// LUCHTAANZUIGING — verzadigingsbewust
+// ═══════════════════════════════════════════════════════════════
+function computeLuchtaanzuiging() {
+  const Tin=S.Tin,RVin=S.RV,H=totalH()/1000,eta=S.eta/100;
+  const Twb=Tin*Math.atan(0.151977*Math.sqrt(RVin+8.313659))
+    +Math.atan(Tin+RVin)-Math.atan(RVin-1.676331)
+    +0.00391838*Math.pow(RVin,1.5)*Math.atan(0.023101*RVin)-4.686035;
+  const dT_max=Math.max(0,Tin-Twb);
+  const ringDetails=RINGS.map(r=>({lbl:r.lbl,on:r.on,nozzle:r.nozzle,nr:r.nr,bar:r.bar,
+    qPerNozzle:nozzleQ(r.nozzle,r.bar),qRing:r.on?r.nr*nozzleQ(r.nozzle,r.bar):0}));
+  const wAct=ringDetails.reduce((s,r)=>s+r.qRing,0);
+  const At=Math.PI*(G.D_throat/2000)**2,C=0.61,g=9.81,Tk=273.15+Tin;
+  const vEst=C*Math.sqrt(2*g*H*Math.max(0.1,dT_max)/Tk);
+  const mEst=vEst*At*1.293*(273.15/Tk);
+  const wMax_lh=mEst>0?mEst*CP_AIR*dT_max/HVAP*3600:0;
+  const wNut=Math.min(wAct,wMax_lh);
+  const wOverschot=Math.max(0,wAct-wMax_lh);
+  const verzadigd=wAct>wMax_lh*1.05&&wMax_lh>0;
+  const pctVerzadigd=wMax_lh>0?Math.min(100,Math.round(wAct/wMax_lh*100)):0;
+  const Qnut=(wNut/3600)*HVAP*eta;
+  let dT=Math.min(S.dT,dT_max);
+  for(let i=0;i<25;i++){
+    const v=C*Math.sqrt(2*g*H*Math.max(0,dT)/Tk);
+    const m=v*At*1.15;
+    const d=Math.min(m>0?Qnut/(m*CP_AIR):0,dT_max);
+    if(Math.abs(d-dT)<0.005){dT=d;break;}
+    dT=dT*0.5+d*0.5;
+  }
+  dT=Math.max(0,Math.min(dT,dT_max));
+  const vStack=dT>0.05?C*Math.sqrt(2*g*H*dT/Tk):0;
+  const Vair_h=vStack*At*3600;
+  const Tout=Tin-dT;
+  const vdIn=calcVD(Tin,RVin),vdUit=satH(Tout)*0.04;
+  const moistAdd=Vair_h>0?(wNut*eta)/Vair_h:0;
+  let cond,condCls;
+  if(wAct===0){cond='⚠ Alle ringen uit';condCls='cond-er';}
+  else if(dT_max<0.5){cond='⚠ Lucht al bijna verzadigd';condCls='cond-er';}
+  else if(verzadigd){cond=`⚠ Verzadigingslimiet! Max. nuttig: ${wMax_lh.toFixed(1)} l/h — overschot ${wOverschot.toFixed(1)} l/h geeft geen koeling`;condCls='cond-wn';}
+  else if(pctVerzadigd>80){cond=`~ ${pctVerzadigd}% van max. ${wMax_lh.toFixed(1)} l/h benut`;condCls='cond-wn';}
+  else if(Vair_h>6000){cond=`✓ Goede aanzuiging — ${pctVerzadigd}% van max. benut`;condCls='cond-ok';}
+  else{cond='~ Matige aanzuiging';condCls='cond-wn';}
+  return {vStack,Vair_h,wAct,wNut,wOverschot,wMax_lh,Tout,Twb,dT,dT_max,
+    Tin,RVin,vdIn,vdUit,moistAdd,Qnut,pctVerzadigd,verzadigd,ringDetails,cond,condCls};
+}
+
+function renderLuchtaanzuiging() {
+  const la=computeLuchtaanzuiging();
+  const fv=document.getElementById('flow-val');
+  if(fv) fv.textContent=la.Vair_h>0?Math.round(la.Vair_h).toLocaleString('nl-NL'):'—';
+  const fw=document.getElementById('flow-sat-warn');
+  if(fw){
+    if(la.verzadigd||la.pctVerzadigd>80){
+      fw.style.display='block';
+      fw.innerHTML=la.verzadigd
+        ?`<strong>⚠ Verzadigingslimiet bereikt</strong><br>Max. nuttig: <strong>${la.wMax_lh.toFixed(1)} l/h</strong> (Twb=${la.Twb.toFixed(1)}°C). Overschot <strong>${la.wOverschot.toFixed(1)} l/h geeft geen extra koeling</strong>.`
+        :`<strong>~ Bijna op maximum</strong> — ${la.pctVerzadigd}% benut. Max. ${la.wMax_lh.toFixed(1)} l/h (Twb=${la.Twb.toFixed(1)}°C).`;
+    } else { fw.style.display='none'; }
+  }
+  const fg=document.getElementById('flow-grid');
+  if(fg) fg.innerHTML=[
+    ['Aanzuigtemperatuur',la.Tin.toFixed(1),'°C'],
+    ['Luchtvochtigheid',la.RVin.toFixed(0),'% RV'],
+    ['Natte boltemp. Twb',la.Twb.toFixed(1),'°C (max. uitlaat)'],
+    ['Max. ΔT haalbaar',la.dT_max.toFixed(1),'K'],
+    ['ΔT bereikt',la.dT.toFixed(2),'K'],
+    ['Uitlaattemperatuur',la.Tout.toFixed(1),'°C'],
+    ['Aanzuigsnelheid keel',la.vStack.toFixed(2),'m/s'],
+    ['Totaal actief water',la.wAct.toFixed(1),'l/h'],
+    ['Nuttig water',la.wNut.toFixed(1),'l/h'],
+    ['Overschot',la.wOverschot.toFixed(1),'l/h'],
+    ['Max. water',la.wMax_lh.toFixed(1),'l/h'],
+    ['Benutting',la.pctVerzadigd,'%'],
+    ['VD inkomend',la.vdIn.toFixed(1),'g/m³'],
+    ['VD uitlaat',la.vdUit.toFixed(1),'g/m³'],
+    ['Koelvermogen nuttig',la.Qnut.toFixed(1),'kW'],
+  ].map(([l,v,u])=>`<div class="flow-item"><div class="flow-item-lbl">${l}</div><div class="flow-item-val">${v}</div><div class="flow-item-uni">${u}</div></div>`).join('');
+  const fg2=document.getElementById('flow-ring-detail');
+  if(fg2) fg2.innerHTML=la.ringDetails.map(r=>{
+    const col=r.on?'var(--green)':'var(--red)';
+    const bg=r.on?'rgba(29,158,117,.12)':'rgba(163,45,45,.1)';
+    return `<div style="background:${bg};border-radius:var(--r);padding:.4rem .7rem;font-size:.72rem">
+      <span style="font-weight:700;color:${col}">${r.lbl}</span>
+      <span style="color:rgba(255,255,255,.5);margin:0 .35rem">|</span>
+      <span style="color:rgba(255,255,255,.8)">${r.on?r.nr+'× '+NOZZLES[r.nozzle].lbl+' @ '+r.bar+' bar = '+r.qPerNozzle.toFixed(2)+' l/h → '+r.qRing.toFixed(1)+' l/h':'UIT'}</span>
+    </div>`;
+  }).join('');
+  const fc=document.getElementById('flow-cond');
+  if(fc){fc.className='cond-bar '+la.condCls;fc.textContent=la.cond;}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOOGTE- EN TEMPERATUURPROFIEL
+// ═══════════════════════════════════════════════════════════════
+function rvOpHoogte(h,x,spacing,la,radius){
+  const hFactor=Math.max(0,1-(h/4.0)*0.85);
+  const sigma=radius*0.7;
+  const g1=Math.exp(-(x*x)/(2*sigma*sigma));
+  const g2=Math.exp(-((x-spacing)**2)/(2*sigma*sigma));
+  const dRV=Math.min(50,la.moistAdd*8);
+  return Math.min(99,la.RVin+dRV*Math.min(1,g1+g2)*hFactor);
+}
+function tOpHoogte(h,x,spacing,la,radius){
+  const hFactor=Math.max(0,1-(h/4.0)*0.85);
+  const sigma=radius*0.7;
+  const g1=Math.exp(-(x*x)/(2*sigma*sigma));
+  const g2=Math.exp(-((x-spacing)**2)/(2*sigma*sigma));
+  return la.Tin-la.dT*Math.min(1,g1+g2)*hFactor;
+}
+
+function drawProfielCanvas(canvasId,valueFunc,labelFunc,yLabel,lineColor1_3,extraLabelFn){
+  const cv=document.getElementById(canvasId);
+  if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const la=computeLuchtaanzuiging();
+  const c=compute();
+  const spacing=S.spacing,radius=c.radius;
+  const pL=44,pR=60,pT=18,pB=28;
+  const gW=W-pL-pR,gH=H-pT-pB;
+  const hoogtes=[0,0.5,1.0,1.3,2.0,3.0,4.0];
+  const kleuren=['#2196F3','#1D9E75','#43A047','#EF9F27','#BA7517','#9E9E9E','#616161'];
+  const nPts=80;
+  const allVals=[];
+  hoogtes.forEach(h=>{for(let i=0;i<=nPts;i++) allVals.push(valueFunc(h,i/nPts*spacing,spacing,la,radius));});
+  const minV=Math.min(...allVals),maxV=Math.max(...allVals);
+  const range=Math.max(0.1,maxV-minV);
+  // Gridlijnen
+  ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=pT+(i/4)*gH;
+    ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(pL+gW,y);ctx.stroke();
+    ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='right';
+    ctx.fillText(labelFunc(minV+(4-i)/4*range),pL-3,y+3);
+  }
+  // Elke hoogte tekenen
+  hoogtes.forEach((h,hi)=>{
+    const pts=[];
+    for(let i=0;i<=nPts;i++) pts.push(valueFunc(h,i/nPts*spacing,spacing,la,radius));
+    ctx.strokeStyle=kleuren[hi];
+    ctx.lineWidth=h===1.3?2.5:1.5;
+    ctx.setLineDash(h===1.3?[]:[4,3]);
+    ctx.beginPath();
+    pts.forEach((v,i)=>{
+      const px=pL+(i/nPts)*gW;
+      const py=pT+gH-((v-minV)/range)*gH;
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.stroke();ctx.setLineDash([]);
+    // Label rechts
+    const lastV=pts[nPts];
+    const py=pT+gH-((lastV-minV)/range)*gH;
+    ctx.font=h===1.3?'bold 9px sans-serif':'8.5px sans-serif';
+    ctx.fillStyle=kleuren[hi];ctx.textAlign='left';
+    ctx.fillText(h+'m: '+labelFunc(lastV),pL+gW+4,Math.max(pT+8,Math.min(pT+gH,py+4)));
+  });
+  // Middenwaarde op 1.30m label bovenin
+  const midVal=valueFunc(1.3,spacing/2,spacing,la,radius);
+  ctx.font='bold 10px sans-serif';ctx.fillStyle='#EF9F27';ctx.textAlign='center';
+  ctx.fillText('Midden 1,30m: '+labelFunc(midVal),pL+gW/2,pT+12);
+  // X-as
+  ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='center';
+  ctx.fillText('T1',pL,H-4);
+  ctx.fillText(r1(spacing/2)+'m',pL+gW/2,H-4);
+  ctx.fillText('T2',pL+gW,H-4);
+  // Y-as label
+  ctx.save();ctx.translate(12,pT+gH/2);ctx.rotate(-Math.PI/2);
+  ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='center';
+  ctx.fillText(yLabel,0,0);ctx.restore();
+}
+
+function drawHoogteProfiel(){
+  drawProfielCanvas('cvs-hoogte-profiel',
+    (h,x,sp,la,r)=>rvOpHoogte(h,x,sp,la,r),
+    v=>Math.round(v)+'%','RV %');
+}
+function drawTempProfiel(){
+  drawProfielCanvas('cvs-temp-profiel',
+    (h,x,sp,la,r)=>tOpHoogte(h,x,sp,la,r),
+    v=>v.toFixed(1)+'°','Temp °C');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OVERRIDE renderDubbel — voeg hoogteprofiel toe
+// ═══════════════════════════════════════════════════════════════
+const _origRenderDubbel = renderDubbel;
+function renderDubbel(c) {
+  _origRenderDubbel(c);
+  // Klimaat middenin 1.30m
+  const la=computeLuchtaanzuiging();
+  const dRV=Math.min(50,la.moistAdd*8);
+  const rv130=Math.min(99,la.RVin+dRV*0.65*0.5); // midden, 1.30m
+  const t130=la.Tout+(la.Tin-la.Tout)*0.35;
+  const vd130=calcVD(t130,rv130);
+  const rdk=document.getElementById('r-dubbel-klimaat');
+  if(rdk) rdk.innerHTML=
+    mc('RV inkomend',r1(la.RVin),'%','')+
+    mc('RV op 1,30m middenin',r1(rv130),'%',rv130>70?'ok':'wn')+
+    mc('Temp. 1,30m middenin',r1(t130),'°C','')+
+    mc('VD 1,30m middenin',r1(vd130),'g/m³',vd130<8?'ok':vd130<10?'wn':'er')+
+    mc('VD reductie',r1(calcVD(la.Tin,la.RVin)-vd130),'g/m³','hi')+
+    mc('ΔT bereikt',r1(la.dT),'K koeling','');
+  drawHoogteProfiel();
+  drawTempProfiel();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ft-ts').textContent =
     new Date().toLocaleDateString('nl-NL',{year:'numeric',month:'long',day:'numeric'});
@@ -1721,6 +2037,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   buildRingConfig();
   renderAll();
-});</script>
+});
+</script>
 </body>
 </html>
