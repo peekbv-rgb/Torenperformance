@@ -1024,34 +1024,6 @@ function renderGeometrie(c) {
 // ═══════════════════════════════════════════════════════════════
 // RENDER — PERFORMANCE TAB
 // ═══════════════════════════════════════════════════════════════
-function renderPerformance(c) {
-  document.getElementById('r-perf-main').innerHTML =
-    mc('Water', S.water, 'l/h', '') +
-    mc('Koelvermogen netto', r1(c.Qnet), 'kW', 'hi') +
-    mc('Koelvermogen max.', r1(c.Qmax), 'kW', '') +
-    mc('Luchtdebiet', Math.round(c.Vairh), 'm³/h', 'hi') +
-    mc('Uitlaattemperatuur', r1(c.Tout), '°C', 'ok') +
-    mc('VD inlaat', r1(c.vdIn), 'g/m³', '') +
-    mc('VD uitlaat', r1(c.vdOut), 'g/m³', 'ok') +
-    mc('Vochttoevoeging', r2(c.moistAdd), 'g/m³', '');
-
-  document.getElementById('r-perf-formula').innerHTML =
-    `Q_max   = ${S.water}/3600 × 2450      = ${r1(c.Qmax)} kW\n` +
-    `Q_netto = ${r1(c.Qmax)} × ${S.eta}%             = ${r1(c.Qnet)} kW\n` +
-    `ṁ_lucht = ${r1(c.Qnet)} / (1.006 × ${S.dT})  = ${r2(c.mAir)} kg/s\n` +
-    `V̇       = ${r2(c.mAir)} / 1.15              = ${Math.round(c.Vairh)} m³/h`;
-
-  document.getElementById('r-venturi').innerHTML =
-    mc('v boven Ø' + G.D_top,    r2(c.v1), 'm/s', '') +
-    mc('v keel Ø' + G.D_throat,  r2(c.v2), 'm/s', 'wn') +
-    mc('v tussen Ø' + G.D_mid,   r2(c.v3), 'm/s', '') +
-    mc('v onder Ø' + G.D_bot,    r2(c.v4), 'm/s', '') +
-    mc('Versnelling keel',  r2(c.v2 / c.v1) + '×', 'keel / boven', 'hi') +
-    mc('ΔP Bernoulli',      r2(c.dP_mbar),    'mbar', 'hi') +
-    mc('Verblijftijd',      r1(c.verblijf),   'sec', '');
-
-  drawVenturiChart(c);
-}
 
 // ═══════════════════════════════════════════════════════════════
 // RENDER — 2 TORENS TAB
@@ -1675,15 +1647,6 @@ function drawArrow(ctx, x1, y1, x2, y2, col, w) {
 // ═══════════════════════════════════════════════════════════════
 // MASTER RENDER
 // ═══════════════════════════════════════════════════════════════
-function renderAll() {
-  const c = compute();
-  renderGeometrie(c);
-  renderPerformance(c);
-  renderDubbel(c);
-  renderHectare(c);
-  renderNozzles(c);
-  renderVD();
-}
 
 // ═══════════════════════════════════════════════════════════════
 // TABS
@@ -1908,8 +1871,6 @@ function renderLuchtaanzuiging() {
   if (fc) { fc.className = 'cond-bar ' + la.condCls; fc.textContent = la.cond; }
 }
 
-// ── Override renderPerformance to use activeWater() ─────────────────────────
-const _origRenderPerf = renderPerformance;
 function renderPerformance(c) {
   const wAct = activeWater();
   // Recalc with active water
@@ -1945,7 +1906,6 @@ function renderPerformance(c) {
     mc('ΔP Bernoulli', r2(c.dP_mbar), 'mbar', 'hi');
 }
 
-// ── Override renderAll ──────────────────────────────────────────────────────
 function renderAll() {
   const c = compute();
   renderGeometrie(c);
