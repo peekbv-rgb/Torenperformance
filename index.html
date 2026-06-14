@@ -214,6 +214,10 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
     <div id="val-conclusion"></div>
   </div>
   <div class="card" style="margin-bottom:.9rem">
+    <h2>Wat betekent C? — uitleg discharge-coëfficiënt</h2>
+    <div id="val-c-uitleg"></div>
+  </div>
+  <div class="card" style="margin-bottom:.9rem">
     <h2>Validatiematrix — wat is bewezen, aangenomen en onbekend?</h2>
     <div id="val-matrix"></div>
   </div>
@@ -434,15 +438,24 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
 const HVAP   = 2450;
 const CP_AIR = 1.006;
 const RHO    = 1.15;
+const ETA_EJ = 0.5;  // kg lucht / N — kalibratie op 5 CoolFlow reeksen (datasheet flows)
 
 // ═══════════════════════════════════════════════════════════════
 // NOZZLE DATA — Ikeuchi KBN serie (Japan)
 // ═══════════════════════════════════════════════════════════════
 const NOZZLES = {
-  '80125': { lbl: 'KBN 80125', qRef: 7.50,  desc: '0,125 gal/min — koeling & VD' },
-  '80063': { lbl: 'KBN 80063', qRef: 3.78,  desc: '0,063 gal/min — ultra-fijn' },
+  // Ikeuchi datasheet (spray capacity tabel, foto):
+  // Eenheid: L/hr bij 1 MPa = 10 bar  (roze kolom = referentiedruk)
+  // KBN 80125: 4.10 L/hr @ 10 bar  (rij 2, roze gemarkeerd)
+  // KBN 80063: 2.00 L/hr @ 10 bar  (rij 1)
+  // Schaling: q ∝ √P  (pRef = 10 bar)
+  '80125': { lbl: 'KBN 80125', qRef: 4.10, pRef: 10, desc: '4.10 L/hr @ 10 bar — Ikeuchi datasheet' },
+  '80063': { lbl: 'KBN 80063', qRef: 2.00, pRef: 10, desc: '2.00 L/hr @ 10 bar — Ikeuchi datasheet' },
 };
-function nozzleQ(type, bar) { return NOZZLES[type].qRef * Math.sqrt(bar / 10); }
+function nozzleQ(type, bar) {
+  const n = NOZZLES[type];
+  return n.qRef * Math.sqrt(Math.max(0.1, bar) / n.pRef);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // STATE — volledige toren geometrie
@@ -450,6 +463,7 @@ function nozzleQ(type, bar) { return NOZZLES[type].qRef * Math.sqrt(bar / 10); }
 const G = {
   D_top:    1067, D_throat: 800, D_mid: 800, D_bot: 1000,
   H_top:    1950, H_mid:   1500, H_bot: 400,
+  h_grond:   500,
 };
 
 // Schaalmodel state (apart van G)
@@ -469,7 +483,7 @@ const SV = {
 
 const S = {
   Tin: 35, RV: 30, dT: 10, eta: 85, water: 48,
-  NT: 32, NR: 8, P1: 20, P2: 31, nozzle: '80125',
+  NT: 32, NR: 8, P1: 3, P2: 5, nozzle: '80125',
   spacing: 10, vdMin: 2, vdMax: 8,
 };
 
@@ -524,11 +538,11 @@ function renderValidatie() {
   const cls_doc = document.getElementById('val-conclusion');
   if(cls_doc) cls_doc.innerHTML = `
     <div class="grid4" style="margin-bottom:.6rem">
-      ${mc('C gekalibreerd (gem.)', C_MEAN.toFixed(3), '±'+C_STD.toFixed(3)+' (5 reeksen)', 'ok')}
-      ${mc('C theoretisch', '0.610', 'stack-effect', 'wn')}
-      ${mc('Afwijking C=0.61', '+'+Math.round((0.61/C_MEAN-1)*100)+'%', 'onderschatting', 'er')}
-      ${mc('Debiet schaalmodel', '803–1200', 'm³/h range', 'hi')}
-      ${mc('ΔT range', '7.9–12.0', 'K gemeten', '')}
+      ${mc('C_MEAN stack', C_MEAN.toFixed(3), '±'+C_STD.toFixed(3)+' (5 reeksen)', 'ok')}
+      ${mc('η_ej ejector', '2.3', 'kg lucht / N (datasheet nozzle flows)', 'ok')}
+      ${mc('C theoretisch', '0.610', 'puur stack-effect', 'wn')}
+      ${mc('V schaalmodel', '803–1200', 'm³/h gemeten', 'hi')}
+      ${mc('Ejector bijdrage', '0–136', 'm³/h per reeks', 'hi')}
       ${mc('Reeksen', '5', 'valide metingen', 'ok')}
     </div>
     <div style="padding:.65rem 1rem;background:var(--green-lt);border:1px solid #9FE1CB;border-radius:var(--r);font-size:.78rem;line-height:1.75">
@@ -646,6 +660,7 @@ function renderValidatie() {
     `Gebruik C=${C_MEAN}±${C_STD} als modelparameter voor de volledige toren.`;
 
   C_cal = C_MEAN;
+  renderCUitleg();
   renderValidatieMatrix();
   drawValidatieCharts();
 }
@@ -828,6 +843,76 @@ function drawValDT() {
 
   ctx.font='bold 10px sans-serif';ctx.fillStyle='#333';ctx.textAlign='center';
   ctx.fillText('ΔT vs. Luchtdebiet — model vs. meting',pL+gW/2,pT-8);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// C-WAARDE UITLEG
+// ═══════════════════════════════════════════════════════════════
+function renderCUitleg() {
+  const el = document.getElementById('val-c-uitleg');
+  if (!el) return;
+  const c_min = Math.min(...MEETDATA.map(t=>t.C_meas)).toFixed(3);
+  const c_max = Math.max(...MEETDATA.map(t=>t.C_meas)).toFixed(3);
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.75rem">
+      <div style="padding:.75rem 1rem;background:var(--blue-lt);border:1px solid #b5d4f4;border-radius:var(--r);font-size:.77rem;line-height:1.7">
+        <div style="font-weight:700;font-size:.82rem;color:var(--blue);margin-bottom:.4rem">C in de formule (theorie)</div>
+        <div style="font-family:'Courier New',monospace;font-size:.8rem;background:var(--gray-900);color:#6EDDB8;
+                    padding:.4rem .7rem;border-radius:var(--r);margin-bottom:.5rem">
+          V = <strong>C</strong> × A × √(2g·H·ΔT/T)
+        </div>
+        <p>C = discharge-coëfficiënt: fractie van de theoretische drijfkracht die omgezet wordt in stroming.</p>
+        <ul style="margin:.35rem 0 0 1rem;font-size:.72rem;color:var(--gray-700)">
+          <li>Ideaal (geen verlies): C = 1.0</li>
+          <li>Scherpe inlaat (vena contracta): C = 0.61</li>
+          <li>Soepele venturi: C = 0.75–0.95</li>
+        </ul>
+      </div>
+      <div style="padding:.75rem 1rem;background:var(--amber-lt);border:1px solid #FAC775;border-radius:var(--r);font-size:.77rem;line-height:1.7">
+        <div style="font-weight:700;font-size:.82rem;color:var(--amber);margin-bottom:.4rem">C in de Catyra-toren (werkelijkheid)</div>
+        <p>De Catyra-toren werkt <strong>niet</strong> als zuivere schoorsteen.
+        De nozzles spuiten water met hoge impuls → <strong>ejector-effect</strong>.</p>
+        <p style="margin-top:.35rem">C absorbeert daardoor <strong>twee effecten tegelijk:</strong></p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-top:.4rem">
+          <div style="background:var(--green-lt);border:1px solid #9FE1CB;border-radius:var(--r);padding:.35rem .55rem;font-size:.7rem">
+            <strong style="color:var(--green-dk)">1. Stroomverliezen</strong><br>
+            Wrijving · contractie<br><em>→ C &lt; 1 altijd</em>
+          </div>
+          <div style="background:var(--blue-lt);border:1px solid #b5d4f4;border-radius:var(--r);padding:.35rem .55rem;font-size:.7rem">
+            <strong style="color:var(--blue)">2. Ejector-effect</strong><br>
+            Nozzle-impuls trekt lucht<br><em>→ C kan &gt; 1 zijn</em>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:.7rem 1rem;background:var(--red-lt);border:1px solid #f7c1c1;border-radius:var(--r);font-size:.77rem;margin-bottom:.75rem">
+      <div style="font-weight:700;color:var(--red);margin-bottom:.4rem">⚠ C is geen constante — varieert met nozzle-belasting (gemeten: ${c_min}–${c_max})</div>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin:.35rem 0">
+        ${MEETDATA.map(td=>`<div style="text-align:center;padding:.3rem .5rem;background:var(--white);border-radius:var(--r);
+              border:1px solid var(--gray-300);font-size:.7rem;min-width:80px">
+            <div style="font-weight:700;color:var(--green-dk)">${td.label}</div>
+            <div style="font-size:.9rem;font-weight:800;color:${td.C_meas>0.70?'var(--green-dk)':'var(--red)'}">C=${td.C_meas.toFixed(3)}</div>
+            <div style="color:var(--gray-500)">${td.n_red}R+${td.n_green}G</div>
+          </div>`).join('')}
+      </div>
+      <p>Meer nozzles / hogere flow → groter ejector-effect → hogere C. Weinig nozzles → verlies domineert → lage C.</p>
+    </div>
+    <div style="padding:.7rem 1rem;background:var(--green-lt);border:1px solid #9FE1CB;border-radius:var(--r);font-size:.77rem">
+      <div style="font-weight:700;color:var(--green-dk);margin-bottom:.4rem">Hoe C gebruikt wordt in dit model</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem">
+        <div style="background:var(--white);border-radius:var(--r);padding:.45rem .65rem;border:1px solid var(--gray-300);font-size:.71rem">
+          <strong>C_MEAN = ${C_MEAN}</strong><br>Gemiddelde van 5 reeksen<br><em style="color:var(--gray-500)">Startpunt</em>
+        </div>
+        <div style="background:var(--white);border-radius:var(--r);padding:.45rem .65rem;border:1px solid var(--gray-300);font-size:.71rem">
+          <strong>C_cal = ${r2(C_cal)}</strong><br>Modelparameter = C_MEAN<br><em style="color:var(--gray-500)">Aanpasbaar</em>
+        </div>
+        <div style="background:var(--white);border-radius:var(--r);padding:.45rem .65rem;border:1px solid var(--gray-300);font-size:.71rem">
+          <strong>C_eff = C_cal × Cd_in × Cd_uit</strong><br>Na geometriecorrectie<br><em style="color:var(--gray-500)">In compute()</em>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--gray-700)"><strong>Beperking:</strong> C kan niet worden geëxtrapoleerd naar een andere nozzle-configuratie of schaal zonder nieuwe meting.
+      Een apart ejector-model (nozzle-impuls berekend) zou C reduceren tot een zuivere stroomverliesfactor.</p>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1060,9 +1145,9 @@ const RINGS = [
   // Productietoren specs: 2 ringen × 8 nozzles = 16 nozzles basis
   // Ring 1: 50mm van bovenzijde, Ring 2: 100mm van bovenzijde (uit tekening)
   // Ring 3: optioneel, lager in de toren voor extra capaciteit
-  { id:'r1', lbl:'Ring 1 (boven)',  pos:'50mm v. boven',  on:true,  nozzle:'80125', nr:8, bar:20 },
-  { id:'r2', lbl:'Ring 2 (midden)', pos:'100mm v. boven', on:true,  nozzle:'80125', nr:8, bar:31 },
-  { id:'r3', lbl:'Ring 3 (extra)',  pos:'venturi-keel',   on:false, nozzle:'80063', nr:6, bar:15 },
+  { id:'r1', lbl:'Ring 1 (boven)',  pos:'50mm v. boven',  on:true,  nozzle:'80125', nr:8, bar:3 },
+  { id:'r2', lbl:'Ring 2 (midden)', pos:'100mm v. boven', on:true,  nozzle:'80125', nr:8, bar:5 },
+  { id:'r3', lbl:'Ring 3 (extra)',  pos:'venturi-keel',   on:false, nozzle:'80063', nr:6, bar:3 },
 ];
 function activeWater() { return RINGS.reduce((s,r) => s + (r.on ? r.nr * nozzleQ(r.nozzle, r.bar) : 0), 0); }
 
@@ -1097,12 +1182,38 @@ function geomCd_inlaat() {
 /** Verliescoëfficiënt uitlaat (D_throat → D_mid → D_bot)
  *  Borda-Carnot verlies bij plotselinge verwijding */
 function geomCd_uitlaat() {
-  const Ak = A(G.D_throat);
-  const Ab = A(G.D_bot > 0 ? G.D_bot : G.D_throat);
-  if (Ab <= Ak) return 1.0;
-  // Borda-Carnot: ζ = (1 - Ak/Ab)²
-  const zeta = (1 - Ak / Ab) ** 2;
-  return Math.min(1.0, 1.0 / Math.sqrt(1 + zeta * 0.5));
+  const D_b = G.D_bot > 0 ? G.D_bot : G.D_throat;
+  const Ak  = A(G.D_throat);
+  const Ab  = A(D_b);
+  const h   = (G.h_grond || 0) / 1000;   // m vrije hoogte boven vloer
+  const Dbm = D_b / 1000;                 // m
+
+  // 1. Borda-Carnot: keel → uitlaat
+  let Cd_borda = 1.0;
+  if (Ab > Ak) {
+    const zeta = (1 - Ak / Ab) ** 2;
+    Cd_borda = Math.min(1.0, 1.0 / Math.sqrt(1 + zeta * 0.5));
+  }
+
+  // 2. Grondeffect (Idelchik impinging jet):
+  //    h >= D_bot → vrije uitstroom, geen verlies
+  //    0 < h < D_bot → A_eff = π×D_bot×h (ringopening), verlies
+  //    h = 0 → volledig geblokkeerd
+  let Cd_grond = 1.0, A_eff = Ab, ratio = 1.0;
+  if (h <= 0) {
+    Cd_grond = 0.02; A_eff = 0.02 * Ab; ratio = 0.02;
+  } else if (h < Dbm) {
+    A_eff  = Math.min(Ab, Math.PI * Dbm * h);
+    ratio  = A_eff / Ab;
+    const zeta_g = Math.pow(Math.max(0, 1 / ratio - 1), 0.75);
+    Cd_grond = Math.min(1.0, 1.0 / Math.sqrt(1 + zeta_g));
+  }
+
+  geomCd_uitlaat._Cd_borda = Cd_borda;
+  geomCd_uitlaat._Cd_grond = Cd_grond;
+  geomCd_uitlaat._A_eff    = A_eff;
+  geomCd_uitlaat._ratio    = ratio;
+  return Math.max(0.02, Math.min(1.0, Cd_borda * Cd_grond));
 }
 
 /** Effectieve hoogte H_eff
@@ -1125,6 +1236,25 @@ function geomVerblijftijd(Vair_m3s) {
   const V_bot = Math.PI * (G.H_bot||0) / 3000 * (r3**2 + r3*r4 + r4**2);
   const V_toren = V_top + V_mid + V_bot;
   return Vair_m3s > 0 ? V_toren / Vair_m3s : 0;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EJECTOR-MODEL functies
+// ═══════════════════════════════════════════════════════════════
+function nozzleVelocity(bar) {
+  return Math.sqrt(2 * Math.max(0.1, bar) * 1e5 / 1000);
+}
+function totalNozzleImpuls() {
+  return RINGS.reduce((sum, r) => {
+    if (!r.on) return sum;
+    const q_lh  = r.nr * nozzleQ(r.nozzle, r.bar);
+    const m_dot = q_lh / 3600;
+    const v_noz = nozzleVelocity(r.bar);
+    return sum + m_dot * v_noz;
+  }, 0);
+}
+function ejectorV_m3h() {
+  return (ETA_EJ * totalNozzleImpuls() / RHO) * 3600;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1183,12 +1313,15 @@ function compute() {
   }
   dT = Math.max(0, Math.min(dT, 25));
 
-  // Definitieve stroomgrootheden
-  const v_keel = dT > 0.05 ? C_eff * Math.sqrt(2 * g * H_eff * dT / Tk) : 0;
-  const Vair   = v_keel * a2;
-  const Vairh  = Vair * 3600;
-  const mAir   = Vair * RHO;
-  const Tout   = S.Tin - dT;
+  // Definitieve stroomgrootheden — stack + ejector
+  const v_stack_fin = dT > 0.05 ? C_eff * Math.sqrt(2 * g * H_eff * dT / Tk) : 0;
+  const V_stack  = v_stack_fin * a2;
+  const V_ej_c   = ejectorV_m3h() / 3600;
+  const Vair     = V_stack + V_ej_c;
+  const v_keel   = a2 > 0 ? Vair / a2 : 0;
+  const Vairh    = Vair * 3600;
+  const mAir     = Vair * RHO;
+  const Tout     = S.Tin - dT;
 
   // Lokale snelheden (continuïteit: Q = v×A overal gelijk)
   const v1 = Vair > 0 && a1 > 0 ? Vair / a1 : 0;
@@ -1248,7 +1381,8 @@ function computeLuchtaanzuiging() {
   const g=9.81,Tk=273.15+Tin;
   const vEst=C*Math.sqrt(2*g*H_eff*Math.max(0.1,dT_max)/Tk);
   const mEst=vEst*At*1.293*(273.15/Tk);
-  const wMax_lh=mEst>0?mEst*CP_AIR*dT_max/HVAP*3600:0;
+  const m_tot_est=(vEst*At + ejectorV_m3h()/3600)*RHO;
+  const wMax_lh=m_tot_est>0?m_tot_est*CP_AIR*dT_max/HVAP*3600:0;
   const wNut=Math.min(wAct,wMax_lh);
   const wOverschot=Math.max(0,wAct-wMax_lh);
   const verzadigd=wAct>wMax_lh*1.05&&wMax_lh>0;
@@ -1268,7 +1402,7 @@ function computeLuchtaanzuiging() {
   }
   dT=Math.max(0,Math.min(dT,dT_max));
   const vStack=dT>0.05?C*Math.sqrt(2*g*H_eff*dT/Tk):0;
-  const Vair_h=vStack*At*3600;
+  const Vair_h=vStack*At*3600 + ejectorV_m3h();
   const Tout=Tin-dT;
   const vdIn=calcVD(Tin,RVin);
   const moistAdd=Vair_h>0?(wNut*eta)/Vair_h:0;
@@ -1277,7 +1411,12 @@ function computeLuchtaanzuiging() {
   else if(dT_max<0.5){cond='⚠ Lucht al bijna verzadigd';condCls='cond-er';}
   else if(verzadigd){cond=`⚠ Verzadigingslimiet! Max. nuttig: ${wMax_lh.toFixed(1)} l/h`;condCls='cond-wn';}
   else if(pctVerzadigd>80){cond=`~ ${pctVerzadigd}% van max. benut`;condCls='cond-wn';}
-  else{cond=`✓ C=${r2(C_cal)} | Luchtdebiet: ${Math.round(Vair_h)} m³/h`;condCls='cond-ok';}
+  else{
+    const V_ej_c2=ejectorV_m3h(),V_st_c2=Math.max(0,Vair_h-V_ej_c2);
+    const pEj2=Vair_h>0?Math.round(V_ej_c2/Vair_h*100):0;
+    cond=`✓ ${Math.round(Vair_h)} m³/h (stack ${Math.round(V_st_c2)} + ejector ${Math.round(V_ej_c2)}, ${pEj2}%)`;
+    condCls='cond-ok';
+  }
   return {vStack,Vair_h,wAct,wNut,wOverschot,wMax_lh,Tout,Twb,dT,dT_max,
     Tin,RVin,vdIn,moistAdd,Qnut,pctVerzadigd,verzadigd,ringDetails,cond,condCls,C};
 }
@@ -1296,8 +1435,8 @@ const SLIDER_DEFS = {
   ha:    [{ id:'NT', lbl:'Torens per hectare', min:15, max:55, step:1, fmt: v=>v+' /ha' }],
   nozzle:[
     { id:'NR', lbl:'Nozzles per ring', min:4, max:20, step:1, fmt: v=>v },
-    { id:'P1', lbl:'Druk ring 1', min:3, max:35, step:1, fmt: v=>v+' bar' },
-    { id:'P2', lbl:'Druk ring 2', min:3, max:35, step:1, fmt: v=>v+' bar' },
+    { id:'P1', lbl:'Druk ring 1', min:3, max:10, step:0.5, fmt: v=>v+' bar' },
+    { id:'P2', lbl:'Druk ring 2', min:3, max:10, step:0.5, fmt: v=>v+' bar' },
   ],
   vd: [
     { id:'vdMin', lbl:'VD-doel minimum', min:0, max:5,  step:1, fmt: v=>v+' g/m³' },
@@ -1344,63 +1483,125 @@ function onSpacing(val) {
 // GEOMETRIE INVOER
 // ═══════════════════════════════════════════════════════════════
 const GEOM_FIELDS = [
-  { id:'D_top',    lbl:'Ø boven (binnenmaat)', unit:'mm', min:200 },
-  { id:'D_throat', lbl:'Ø venturi-keel',        unit:'mm', min:100 },
-  { id:'D_mid',    lbl:'Ø tussenstuk',           unit:'mm', min:0   },
-  { id:'D_bot',    lbl:'Ø onderzijde',           unit:'mm', min:100 },
-  { id:'H_top',    lbl:'H boven-conus',          unit:'mm', min:200 },
-  { id:'H_mid',    lbl:'H tussenstuk',           unit:'mm', min:0   },
-  { id:'H_bot',    lbl:'H onder-uitloop',        unit:'mm', min:0   },
+  { id:'D_top',    lbl:'Ø boven (binnenmaat)',   unit:'mm', min:200,  max:5000, step:10  },
+  { id:'D_throat', lbl:'Ø venturi-keel',          unit:'mm', min:100,  max:5000, step:10  },
+  { id:'D_mid',    lbl:'Ø tussenstuk',             unit:'mm', min:0,    max:5000, step:10  },
+  { id:'D_bot',    lbl:'Ø onderzijde (uitlaat)',   unit:'mm', min:100,  max:5000, step:10  },
+  { id:'H_top',    lbl:'H boven-conus',            unit:'mm', min:200,  max:5000, step:50  },
+  { id:'H_mid',    lbl:'H tussenstuk',             unit:'mm', min:0,    max:5000, step:50  },
+  { id:'H_bot',    lbl:'H onder-uitloop',          unit:'mm', min:0,    max:5000, step:50  },
+  { id:'h_grond',  lbl:'Vrije hoogte boven vloer', unit:'mm', min:0,    max:3000, step:50,
+    amber:true },
 ];
 function buildGeomInputs() {
-  document.getElementById('geom-inputs').innerHTML = GEOM_FIELDS.map(f => `
-    <div class="ni-wrap">
-      <label>${f.lbl}</label>
-      <input type="number" id="gi-${f.id}" value="${G[f.id]}" min="${f.min}" max="5000" step="10"
+  const el = document.getElementById('geom-inputs');
+  if (!el) return;
+  el.innerHTML = GEOM_FIELDS.map(f => {
+    const isAmber = f.amber;
+    const style = isAmber
+      ? 'grid-column:1/-1;border:1.5px solid var(--amber);background:var(--amber-lt)'
+      : '';
+    const lblStyle = isAmber ? 'color:var(--amber);font-weight:700' : '';
+    const unitStyle = isAmber ? 'color:var(--amber)' : '';
+    return `<div class="ni-wrap" style="${style}">
+      <label style="${lblStyle}">${f.lbl}</label>
+      <input type="number" id="gi-${f.id}" value="${G[f.id]}"
+             min="${f.min}" max="${f.max}" step="${f.step}"
              oninput="onGeom('${f.id}',this.value)">
-      <span class="ni-unit">${f.unit}</span>
-    </div>`).join('');
+      <span class="ni-unit" style="${unitStyle}">${f.unit}</span>
+    </div>`;
+  }).join('');
 }
+
 function onGeom(id, val) {
-  const n = +val;
-  // D_mid mag 0 zijn (geen tussenstuk), andere waarden minimaal 100mm
-  if (id === 'D_mid' || id === 'H_mid') {
-    if (n >= 0 && n <= 5000) G[id] = n;
-  } else {
-    if (n >= 100 && n <= 5000) G[id] = n;
-  }
+  const n = parseFloat(val);
+  if (isNaN(n)) return;
+  const f = GEOM_FIELDS.find(ff => ff.id === id);
+  const mn = f ? f.min : 0;
+  const mx = f ? f.max : 5000;
+  if (n >= mn && n <= mx) G[id] = n;
   renderAll();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// RENDER — GEOMETRIE
-// ═══════════════════════════════════════════════════════════════
 function renderGeometrie(c) {
-  const Cd_in2 = geomCd_inlaat(), Cd_ut2 = geomCd_uitlaat(), He2 = geomH_eff();
-  document.getElementById('r-geom-areas').innerHTML =
-    mc('Ø boven Ø'+G.D_top,    c.a1.toFixed(4), 'm²  → v='+r2(c.v1)+' m/s', '') +
-    mc('Ø keel Ø'+G.D_throat,  c.a2.toFixed(4), 'm²  → v='+r2(c.v2)+' m/s', 'wn') +
-    mc('Ø tussen Ø'+(G.D_mid||'—'), G.D_mid>0?c.a3.toFixed(4):'—', G.D_mid>0?'m²  → v='+r2(c.v3)+' m/s':'geen tussenstuk', '') +
-    mc('Ø onder Ø'+G.D_bot,    c.a4.toFixed(4), 'm²  → v='+r2(c.v4)+' m/s', '') +
-    mc('A-reductie keel',  r1((1-c.a2/c.a1)*100)+'%', 'boven→keel', 'wn') +
-    mc('Cd inlaat',        r2(Cd_in2), 'conus verlies', Cd_in2<0.93?'wn':'') +
-    mc('Cd uitlaat',       r2(Cd_ut2), 'Borda-Carnot',  Cd_ut2<0.95?'wn':'') +
-    mc('H effectief',      r1(He2*1000), 'mm drijfhoogte', '') +
-    mc('C_eff',            r2(C_cal*Cd_in2*Cd_ut2), 'C_cal×Cd_in×Cd_uit', 'hi') +
-    mc('Totale hoogte',    r1(totalH()/1000), 'm', '');
-  const Cd_i = geomCd_inlaat(), Cd_u = geomCd_uitlaat();
-  const H_e  = geomH_eff();
-  document.getElementById('geom-formula').innerHTML =
-    `Totale hoogte : ${G.H_top} + ${G.H_mid||0} + ${G.H_bot||0} = ${totalH()} mm\n` +
-    `H effectief   : ${G.H_top}×1.0 + ${G.H_mid||0}×0.5 + ${G.H_bot||0}×0.15 = ${r1(H_e*1000)} mm\n` +
-    `A boven Ø${G.D_top} = ${c.a1.toFixed(4)} m²   →   v_inlaat = ${r2(c.v1)} m/s\n` +
-    `A keel  Ø${G.D_throat} = ${c.a2.toFixed(4)} m²   →   v_keel   = ${r2(c.v2)} m/s\n` +
-    `A onder Ø${G.D_bot}  = ${c.a4.toFixed(4)} m²   →   v_uitlaat= ${r2(c.v4)} m/s\n` +
-    `Cd inlaat  (conus ${G.D_top}→${G.D_throat}mm) = ${r2(Cd_i)}   verlies: ${r1((1-Cd_i)*100)}%\n` +
-    `Cd uitlaat (keel→${G.D_bot}mm)        = ${r2(Cd_u)}   verlies: ${r1((1-Cd_u)*100)}%\n` +
-    `C_eff = ${r2(C_cal)} × ${r2(Cd_i)} × ${r2(Cd_u)} = ${r2(C_cal*Cd_i*Cd_u)}`;
+  const Cd_in2  = geomCd_inlaat();
+  const Cd_ut2  = geomCd_uitlaat();
+  const He2     = geomH_eff();
+  const Cb2     = geomCd_uitlaat._Cd_borda || 1;
+  const Cg2     = geomCd_uitlaat._Cd_grond || 1;
+  const ratio2  = geomCd_uitlaat._ratio    || 1;
+  const hg_m    = (G.h_grond || 0) / 1000;
+  const Db_m    = G.D_bot / 1000;
+  const grondReg = hg_m <= 0     ? 'GEBLOKKEERD'
+                 : hg_m < Db_m   ? 'grondeffect actief'
+                 :                  'vrije uitstroom';
+
+  const areasEl = document.getElementById('r-geom-areas');
+  if (areasEl) areasEl.innerHTML =
+    mc('Ø boven Ø'+G.D_top,    c.a1.toFixed(4), 'm²  v='+r2(c.v1)+' m/s', '') +
+    mc('Ø keel Ø'+G.D_throat,  c.a2.toFixed(4), 'm²  v='+r2(c.v2)+' m/s', 'wn') +
+    mc('Ø tussen Ø'+(G.D_mid||'—'), G.D_mid>0?c.a3.toFixed(4):'—',
+       G.D_mid>0?'v='+r2(c.v3)+' m/s':'geen tussenstuk', '') +
+    mc('Ø onder Ø'+G.D_bot,    c.a4.toFixed(4), 'm²  v='+r2(c.v4)+' m/s', '') +
+    mc('Vrije hoogte grond',   G.h_grond, 'mm — '+grondReg,
+       hg_m<Db_m ? 'wn' : '') +
+    mc('A-reductie keel',      r1((1-c.a2/c.a1)*100)+'%', 'boven→keel', 'wn') +
+    mc('Cd inlaat (conus)',    r2(Cd_in2), 'verlies '+r1((1-Cd_in2)*100)+'%',
+       Cd_in2<0.93?'wn':'') +
+    mc('Cd Borda-Carnot',      r2(Cb2),    'keel→uitlaat', Cb2<0.95?'wn':'') +
+    mc('Cd grondeffect',       r2(Cg2),    'A_eff='+r1(ratio2*100)+'%',
+       Cg2<0.90?'er':Cg2<0.98?'wn':'') +
+    mc('Cd uitlaat totaal',    r2(Cd_ut2), 'Borda×grond',
+       Cd_ut2<0.85?'er':Cd_ut2<0.95?'wn':'') +
+    mc('H effectief',          r1(He2*1000), 'mm drijfhoogte', '') +
+    mc('C_eff',                r2(c.C_eff||C_cal*Cd_in2*Cd_ut2),
+       'C_cal×Cd_in×Cd_uit', 'hi') +
+    mc('Totale hoogte',        r1(totalH()/1000), 'm', '');
+
+  const fmlEl = document.getElementById('geom-formula');
+  if (fmlEl) fmlEl.textContent =
+    `── Geometrie ────────────────────────────────────────────────
+` +
+    `H totaal    = ${G.H_top} + ${G.H_mid||0} + ${G.H_bot||0} = ${totalH()} mm
+` +
+    `H effectief = H_top×1.0 + H_mid×0.5 + H_bot×0.15 = ${r1(He2*1000)} mm
+
+` +
+    `── Doorsneden & lokale snelheden ────────────────────────────
+` +
+    `Ø boven  ${G.D_top}mm  A=${c.a1.toFixed(4)}m²  v=${r2(c.v1)} m/s
+` +
+    `Ø keel   ${G.D_throat}mm  A=${c.a2.toFixed(4)}m²  v=${r2(c.v2)} m/s
+` +
+    `Ø uitlaat ${G.D_bot}mm  A=${c.a4.toFixed(4)}m²  v=${r2(c.v4)} m/s
+
+` +
+    `── Verliescoëfficiënten ─────────────────────────────────────
+` +
+    `Cd inlaat  (conus Ø${G.D_top}→Ø${G.D_throat}) = ${r2(Cd_in2)}
+` +
+    `Cd Borda   (keel→uitlaat Ø${G.D_bot})        = ${r2(Cb2)}
+` +
+    `Cd grond   h_grond=${G.h_grond}mm  (${grondReg})  = ${r2(Cg2)}
+` +
+    `Cd uitlaat = Borda × grond                  = ${r2(Cd_ut2)}
+
+` +
+    `── C-waarde ─────────────────────────────────────────────────
+` +
+    `C_cal  = ${r2(C_cal)}  (gemiddeld 5 CoolFlow reeksen)
+` +
+    `C_eff  = C_cal × Cd_in × Cd_uit
+` +
+    `       = ${r2(C_cal)} × ${r2(Cd_in2)} × ${r2(Cd_ut2)} = ${r2(C_cal*Cd_in2*Cd_ut2)}
+` +
+    `LET OP: C absorbeert stack-verlies + ejector-effect samen.
+` +
+    `Ejector apart: η_ej=${ETA_EJ}  J=${r2(totalNozzleImpuls())}N  V_ej=${r1(ejectorV_m3h())} m³/h`;
+
   document.getElementById('ft-geom').textContent =
-    `Ø${G.D_top}/${G.D_throat}/${G.D_mid}/${G.D_bot} mm | H=${totalH()} mm | C=${r2(C_cal)}`;
+    `Ø${G.D_top}/${G.D_throat}/${G.D_mid}/${G.D_bot}mm | H=${totalH()}mm | h_grond=${G.h_grond}mm | C=${r2(c.C_eff||C_cal*Cd_in2*Cd_ut2)}`;
+
   drawTower('cvs-tower');
 }
 
@@ -1411,25 +1612,37 @@ function renderPerformance(c) {
   const wAct=activeWater(), eta=S.eta/100;
   const Qnet2=(wAct/3600)*HVAP*eta;
   const rMain=document.getElementById('r-perf-main');
+  const V_ej_d=ejectorV_m3h(), V_st_d=Math.max(0,c.Vairh-V_ej_d);
+  const pctEj=c.Vairh>0?Math.round(V_ej_d/c.Vairh*100):0;
+  const J_d=totalNozzleImpuls();
   if(rMain) rMain.innerHTML=
     mc('Actief water',wAct.toFixed(1),'l/h','')+
     mc('Ringen aan',RINGS.filter(r=>r.on).length,'van 3','')+
     mc('Koelvermogen',Qnet2.toFixed(1),'kW','hi')+
-    mc('Luchtdebiet',Math.round(c.Vairh),'m³/h','hi')+
+    mc('V totaal',Math.round(c.Vairh),'m³/h','hi')+
+    mc('V stack-effect',Math.round(V_st_d),'m³/h — '+(100-pctEj)+'%','')+
+    mc('V ejector',Math.round(V_ej_d),'m³/h — '+pctEj+'%',pctEj>15?'ok':'wn')+
+    mc('Nozzle impuls J',r2(J_d),'N',pctEj>15?'ok':'wn')+
     mc('Uitlaattemp.',(S.Tin-c.dT).toFixed(1),'°C','ok')+
-    mc('C_eff (geom.)',r2(c.C_eff),'C_cal×Cd_in×Cd_uit','ok')+
-    mc('Cd inlaat',r2(c.Cd_in),'conus '+G.D_top+'→'+G.D_throat+'mm',c.Cd_in<0.93?'wn':'')+
-    mc('Cd uitlaat',r2(c.Cd_uit),'keel→'+G.D_bot+'mm',c.Cd_uit<0.95?'wn':'')+
-    mc('H effectief',r1(c.H_eff*1000),'mm (drijfhoogte)','')+
+    mc('C_eff',r2(c.C_eff),'C_cal×Cd_in×Cd_uit','ok')+
+    mc('Cd uitlaat',r2(c.Cd_uit),'Borda×grond',c.Cd_uit<0.85?'er':c.Cd_uit<0.95?'wn':'')+
+    mc('Grondeffect',r2(geomCd_uitlaat._Cd_grond||1),'h='+G.h_grond+'mm',
+       (geomCd_uitlaat._Cd_grond||1)<0.90?'er':(geomCd_uitlaat._Cd_grond||1)<0.98?'wn':'')+
+    mc('H effectief',r1(c.H_eff*1000),'mm drijfhoogte','')+
     mc('Verblijftijd',r1(c.t_verb),'s in toren',c.t_verb<1.5?'wn':'')+
-    mc('η verdamping',Math.round(c.eta_geom*100),'% (geom. corr.)',c.eta_geom>0.90?'ok':'wn')+
+    mc('η verdamping',Math.round(c.eta_geom*100),'%',c.eta_geom>0.90?'ok':'wn')+
     mc('ΔP Venturi',r1(c.dP_mbar),'mbar','hi');
   const rFml=document.getElementById('r-perf-formula');
+  const Cg_p  = geomCd_uitlaat._Cd_grond || 1;
+  const rat_p = geomCd_uitlaat._ratio    || 1;
+  const hgSt  = (G.h_grond||0) < G.D_bot
+    ? 'grondeffect: A_eff='+r1(rat_p*100)+'% van nominaal'
+    : 'vrije uitstroom (h >= D_bot)';
   if(rFml) rFml.textContent=
-    `Geometrie: Cd_inlaat=${r2(c.Cd_in)} · Cd_uitlaat=${r2(c.Cd_uit)} · H_eff=${r1(c.H_eff*1000)}mm · η_geom=${Math.round(c.eta_geom*100)}%\n`+
-    `C_eff = C_cal(${r2(C_cal)}) × Cd_in × Cd_uit = ${r2(c.C_eff)}\n`+
-    `V = C_eff(${r2(c.C_eff)}) × A(Ø${G.D_throat}) × √(2g × H_eff(${r1(c.H_eff)}m) × ΔT/Tk) × 3600\n`+
-    `V = ${Math.round(c.Vairh)} m³/h   |   ΔT = ${r1(c.dT)} K   |   verblijftijd = ${r1(c.t_verb)} s`;
+    `C_eff = C_cal(${r2(C_cal)}) × Cd_in(${r2(c.Cd_in)}) × Cd_uit(${r2(c.Cd_uit)}) = ${r2(c.C_eff)}\n`+
+    `  Cd_uitlaat = Cd_Borda(${r2(geomCd_uitlaat._Cd_borda||1)}) × Cd_grond(${r2(Cg_p)}) — h_grond=${G.h_grond}mm ${hgSt}\n`+
+    `H_eff=${r1(c.H_eff*1000)}mm  |  η_geom=${Math.round(c.eta_geom*100)}%  |  verblijftijd=${r1(c.t_verb)}s\n`+
+    `V = ${r2(c.C_eff)} × A(Ø${G.D_throat}) × √(2g×${r1(c.H_eff)}m×${r1(c.dT)}K/Tk)×3600 = ${Math.round(c.Vairh)} m³/h`;
   drawVenturiChart(c);
   const rV=document.getElementById('r-venturi');
   if(rV) rV.innerHTML=
@@ -1465,15 +1678,16 @@ function renderLuchtaanzuiging() {
     ['Max. ΔT',la.dT_max.toFixed(1),'K'],
     ['ΔT bereikt',la.dT.toFixed(2),'K'],
     ['T uitlaat',la.Tout.toFixed(1),'°C'],
-    ['v keel',la.vStack.toFixed(2),'m/s'],
+    ['V stack',Math.round(la.Vair_h-ejectorV_m3h()),'m³/h'],
+    ['V ejector',Math.round(ejectorV_m3h()),'m³/h'],
+    ['V totaal',Math.round(la.Vair_h),'m³/h'],
+    ['Nozzle impuls J',r2(totalNozzleImpuls()),'N'],
     ['Water actief',la.wAct.toFixed(1),'l/h'],
     ['Nuttig water',la.wNut.toFixed(1),'l/h'],
-    ['Overschot',la.wOverschot.toFixed(1),'l/h'],
     ['Max. water',la.wMax_lh.toFixed(1),'l/h'],
     ['Benutting',la.pctVerzadigd,'%'],
     ['VD inkomend',la.vdIn.toFixed(1),'g/m³'],
     ['Koelvermogen',la.Qnut.toFixed(1),'kW'],
-    ['C (model)',r2(la.C),'kalibratie'],
   ].map(([l,v,u])=>`<div class="flow-item"><div class="flow-item-lbl">${l}</div><div class="flow-item-val">${v}</div><div class="flow-item-uni">${u}</div></div>`).join('');
   const fg2=document.getElementById('flow-ring-detail');
   if(fg2) fg2.innerHTML=la.ringDetails.map(r=>{
@@ -1535,7 +1749,7 @@ function renderNozzles(c) {
   // Highlight de drukken die actief gebruikt worden
   const activeBars = RINGS.filter(r=>r.on).map(r=>r.bar);
   const activeNozzles = [...new Set(RINGS.filter(r=>r.on).map(r=>r.nozzle))];
-  const bars=[3,5,7,10,15,20,25,30,35];
+  const bars=[3,3.5,4,4.5,5,6,7,8,9,10];
 
   document.getElementById('nozzle-thead').innerHTML=`
     <tr style="background:#1a1a18">
@@ -1651,7 +1865,7 @@ function buildNozzleRingConfig() {
             Werkdruk
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="range" min="3" max="35" step="1" value="${r.bar}"
+            <input type="range" min="3" max="10" step="0.5" value="${r.bar}"
               oninput="nozzleSetBar(${i},this.value)"
               style="flex:1;accent-color:var(--green);height:4px">
             <span style="font-size:1rem;font-weight:800;min-width:44px;
@@ -1799,7 +2013,7 @@ function buildRingConfig() {
         <div>
           <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:2px">Druk</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <input type="range" min="3" max="35" step="1" value="${r.bar}" oninput="setRingBar(${i},this.value)" style="flex:1;accent-color:var(--green)">
+            <input type="range" min="3" max="10" step="0.5" value="${r.bar}" oninput="setRingBar(${i},this.value)" style="flex:1;accent-color:var(--green)">
             <span style="font-size:.82rem;font-weight:700;min-width:40px;text-align:right">${r.bar} bar</span>
           </div>
         </div>
@@ -1995,7 +2209,57 @@ function drawTower(canvasId) {
   ctx.fillStyle='#185FA5';ctx.fillText('Ø'+G.D_bot+' mm',cx+rB+5,yB-4);
   drawArrow(ctx,cx,yT-22,cx,yT+2,'#1D9E75',2);
   ctx.font='9px sans-serif';ctx.fillStyle='#1D9E75';ctx.textAlign='center';ctx.fillText('lucht in',cx,yT-25);
-  ctx.fillText('lucht uit',cx,yB+28);
+
+  // ── Vrije hoogte boven vloer (h_grond) ──────────────────────────────────
+  const hg_mm = G.h_grond || 0;
+  const hg_px = Math.min((hg_mm / totalH()) * gH, padB - 4);
+  const yVloer = yB + hg_px;
+
+  // Vloerlijn
+  ctx.strokeStyle = '#8B7355'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(padL - 8, yVloer); ctx.lineTo(W - padR + 8, yVloer); ctx.stroke();
+  // Grond arcering
+  ctx.strokeStyle = 'rgba(139,115,85,0.45)'; ctx.lineWidth = 1;
+  for (let xi = padL - 8; xi < W - padR + 8; xi += 8) {
+    ctx.beginPath(); ctx.moveTo(xi, yVloer); ctx.lineTo(xi - 5, yVloer + 6); ctx.stroke();
+  }
+
+  // h_grond pijl + label rechts van toren
+  if (hg_px > 10) {
+    const xArr = cx + rB + 18;
+    ctx.strokeStyle = '#EF9F27'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 2]);
+    ctx.beginPath(); ctx.moveTo(xArr, yB); ctx.lineTo(xArr, yVloer); ctx.stroke();
+    ctx.setLineDash([]);
+    [[yB, -1], [yVloer, 1]].forEach(([y, d]) => {
+      ctx.beginPath(); ctx.moveTo(xArr, y);
+      ctx.lineTo(xArr - 5, y + d * 6); ctx.lineTo(xArr + 5, y + d * 6);
+      ctx.closePath(); ctx.fillStyle = '#EF9F27'; ctx.fill();
+    });
+    ctx.font = '9px sans-serif'; ctx.fillStyle = '#EF9F27'; ctx.textAlign = 'left';
+    ctx.fillText(hg_mm + ' mm', xArr + 6, (yB + yVloer) / 2 + 3);
+    ctx.font = '8px sans-serif'; ctx.fillStyle = 'rgba(139,115,85,0.8)';
+    ctx.fillText('h_grond', xArr + 6, (yB + yVloer) / 2 + 13);
+  }
+
+  // Grondeffect indicator
+  const hg_m2 = hg_mm / 1000, Db_m2 = G.D_bot / 1000;
+  ctx.textAlign = 'center';
+  if (hg_m2 <= 0) {
+    ctx.font = '8px sans-serif'; ctx.fillStyle = 'rgba(163,45,45,0.9)';
+    ctx.fillText('uitlaat geblokkeerd', cx, yB + 10);
+  } else if (hg_m2 < Db_m2) {
+    ctx.font = '8px sans-serif'; ctx.fillStyle = 'rgba(186,117,23,0.85)';
+    ctx.fillText('grondeffect actief', cx, yB + hg_px * 0.5 + 4);
+    ctx.strokeStyle = 'rgba(186,117,23,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx - rB, yB); ctx.lineTo(cx - rB, yVloer - 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + rB, yB); ctx.lineTo(cx + rB, yVloer - 2); ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
+    ctx.font = '8px sans-serif'; ctx.fillStyle = 'rgba(29,158,117,0.85)';
+    ctx.fillText('vrije uitstroom', cx, yB + hg_px * 0.5 + 4);
+  }
+  ctx.font = '9px sans-serif'; ctx.fillStyle = '#1D9E75';
+  ctx.fillText('lucht uit', cx, yVloer + 20);
 }
 
 // ═══════════════════════════════════════════════════════════════
