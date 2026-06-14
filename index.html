@@ -438,7 +438,7 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
 const HVAP   = 2450;
 const CP_AIR = 1.006;
 const RHO    = 1.15;
-const ETA_EJ = 0.5;  // kg lucht / N — kalibratie op 5 CoolFlow reeksen (datasheet flows)
+const ETA_EJ = 0.493;  // kg lucht/N — kalibratie 8R+8G reeksen
 
 // ═══════════════════════════════════════════════════════════════
 // NOZZLE DATA — Ikeuchi KBN serie (Japan)
@@ -482,7 +482,7 @@ const SV = {
 };
 
 const S = {
-  Tin: 35, RV: 30, dT: 10, eta: 85, water: 48,
+  Tin: 35, RV: 30, dT: 10, eta: 97, water: 48,
   NT: 32, NR: 8, P1: 3, P2: 5, nozzle: '80125',
   spacing: 10, vdMin: 2, vdMax: 8,
 };
@@ -490,14 +490,15 @@ const S = {
 // ═══════════════════════════════════════════════════════════════
 // MEETDATA — 6 CoolFlow testreeksen (steady-state gemiddelden)
 // ═══════════════════════════════════════════════════════════════
+// C_meas = C_stack herijkt | W_inj = ingespoten (datasheet @ 3 bar) | W_max = dAH×V/1000
 const MEETDATA = [
-  { test:'8red',         label:'8R',       n_red:8, n_green:0, T_in:29.99, RH_in:51.11, V_in:0.8032, T_out:22.11, dT:7.88,  V_m3h:1050.1, water_hr:4.13, C_meas:0.795 },
-  { test:'4red',         label:'4R',       n_red:4, n_green:0, T_in:29.72, RH_in:29.77, V_in:0.6146, T_out:17.69, dT:12.03, V_m3h:803.5,  water_hr:4.88, C_meas:0.492 },
-  { test:'4red_4green',  label:'4R+4G',    n_red:4, n_green:4, T_in:30.56, RH_in:45.39, V_in:0.7151, T_out:21.19, dT:9.37,  V_m3h:934.9,  water_hr:3.97, C_meas:0.650 },
-  { test:'4green_extra', label:'4G(extra)',n_red:0, n_green:4, T_in:31.84, RH_in:36.67, V_in:0.8447, T_out:21.13, dT:10.72, V_m3h:1104.3, water_hr:6.66, C_meas:0.719 },
-  { test:'8green',       label:'8G',       n_red:0, n_green:8, T_in:29.12, RH_in:46.53, V_in:0.8657, T_out:20.73, dT:8.40,  V_m3h:1131.8, water_hr:5.12, C_meas:0.829 },
+  { test:'8red',         label:'8R',       n_red:8, n_green:0, T_in:29.99, RH_in:51.11, V_in:0.8032, T_out:22.11, dT:7.88,  V_m3h:1050.1, water_hr:4.13, C_meas:0.631, W_inj:17.97, W_max:17.6 },
+  { test:'4red',         label:'4R',       n_red:4, n_green:0, T_in:29.72, RH_in:29.77, V_in:0.6146, T_out:17.69, dT:12.03, V_m3h:803.5,  water_hr:4.88, C_meas:0.417, W_inj:8.98,  W_max:19.1 },
+  { test:'4red_4green',  label:'4R+4G',    n_red:4, n_green:4, T_in:30.56, RH_in:45.39, V_in:0.7151, T_out:21.19, dT:9.37,  V_m3h:934.9,  water_hr:3.97, C_meas:0.543, W_inj:13.36, W_max:18.2 },
+  { test:'4green_extra', label:'4G(extra)',n_red:0, n_green:4, T_in:31.84, RH_in:36.67, V_in:0.8447, T_out:21.13, dT:10.72, V_m3h:1104.3, water_hr:6.66, C_meas:0.654, W_inj:4.38,  W_max:27.1 },
+  { test:'8green',       label:'8G',       n_red:0, n_green:8, T_in:29.12, RH_in:46.53, V_in:0.8657, T_out:20.73, dT:8.40,  V_m3h:1131.8, water_hr:5.12, C_meas:0.728, W_inj:8.76,  W_max:19.6 },
 ];
-const C_MEAN = 0.697;
+const C_MEAN = 0.595;  // herijkt: C_stack na ejector-aftrek (datasheet nozzle flows)
 const C_STD  = 0.120;
 let C_cal = C_MEAN;
 let selectedTest = 0;
@@ -566,18 +567,21 @@ function renderValidatie() {
   const err061 = (sim.V_061 - td.V_m3h) / td.V_m3h * 100;
 
   const mEl = document.getElementById('val-measured');
+  const W_pct = td.W_inj&&td.W_max?Math.round(td.W_inj/td.W_max*100):0;
   if(mEl) mEl.innerHTML = `
     <div style="font-weight:700;font-size:.82rem;margin-bottom:.5rem;color:var(--green)">${td.label} — ${td.n_red}× KBN80125 + ${td.n_green}× KBN80063</div>
     <div class="grid4">
       ${mc('T inlaat', td.T_in, '°C', '')}
       ${mc('RV inlaat', td.RH_in, '%', '')}
-      ${mc('V inlaat gem.', td.V_in, 'm/s', '')}
-      ${mc('T uitlaat', td.T_out, '°C', '')}
       ${mc('ΔT gemeten', td.dT, 'K', 'hi')}
       ${mc('Q gemeten', Math.round(td.V_m3h), 'm³/h', 'hi')}
-      ${mc('Water verdampt', td.water_hr, 'l/h', '')}
-      ${mc('C uit meting', td.C_meas.toFixed(3), '—', td.C_meas>0.65?'ok':'wn')}
+      ${mc('W ingespoten', td.W_inj?r1(td.W_inj):'—', 'L/h datasheet @ 3 bar', '')}
+      ${mc('W max psychro', td.W_max?r1(td.W_max):'—', 'L/h (dAH×V)', td.W_inj&&td.W_inj>td.W_max*1.05?'er':'ok')}
+      ${mc('Benutting', W_pct+'%', 'van W_max', W_pct>100?'er':W_pct>80?'wn':'ok')}
+      ${mc('C_stack', td.C_meas.toFixed(3), 'herijkt (excl. ejector)', td.C_meas>0.55?'ok':'wn')}
+      ${mc('CSV water (AH)', td.water_hr, 'L/h verdampt', '')}
     </div>`;
+
 
   const cmp = document.getElementById('val-compare');
   if(cmp) cmp.innerHTML = `
@@ -1380,9 +1384,14 @@ function computeLuchtaanzuiging() {
   const H_eff=geomH_eff();
   const g=9.81,Tk=273.15+Tin;
   const vEst=C*Math.sqrt(2*g*H_eff*Math.max(0.1,dT_max)/Tk);
-  const mEst=vEst*At*1.293*(273.15/Tk);
-  const m_tot_est=(vEst*At + ejectorV_m3h()/3600)*RHO;
-  const wMax_lh=m_tot_est>0?m_tot_est*CP_AIR*dT_max/HVAP*3600:0;
+  // W_max: psychrometrisch correct — vochtopname langs isenthalpe lijn
+  // dAH = AH_sat(T_in) - AH_in  [g/m³]  = hoeveel water de WARME lucht nog kan opnemen
+  // Niet berekend op T_wb (dat geeft te lage waarde omdat T_wb < T_in)
+  const V_tot_est   = (vEst*At + ejectorV_m3h()/3600) * 3600;  // m³/h
+  const AH_sat_in   = satH(Tin);                                 // g/m³ bij T_in
+  const AH_in_act   = AH_sat_in * RVin / 100;                   // g/m³ werkelijk
+  const dAH_inlaat  = AH_sat_in - AH_in_act;                    // g/m³ nog op te nemen
+  const wMax_lh     = dAH_inlaat * V_tot_est / 1000;            // L/h
   const wNut=Math.min(wAct,wMax_lh);
   const wOverschot=Math.max(0,wAct-wMax_lh);
   const verzadigd=wAct>wMax_lh*1.05&&wMax_lh>0;
