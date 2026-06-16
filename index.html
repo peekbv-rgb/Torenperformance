@@ -316,33 +316,60 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
 
 <!-- ═══════ TAB 3 — 2 TORENS ═══════ -->
 <section id="tab-dubbel" class="tp">
-  <div class="grid2">
-    <div class="col">
-      <div class="card">
-        <h2>Afstand tussen torens</h2>
-        <div class="spacing-ctrl">
-          <label>Hart-op-hart afstand</label>
-          <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10" oninput="onSpacing(this.value)">
-          <span class="sv" id="sv-spacing">10,0 m</span>
-        </div>
-        <div class="grid4" id="r-dubbel-cards"></div>
+
+  <!-- ── Afstand-control ── -->
+  <div style="background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r-lg);
+              padding:1rem 1.25rem;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                    color:var(--gray-500);margin-bottom:2px">Hart-op-hart afstand</div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--green-dk);line-height:1" id="sv-spacing-big">10.0 m</div>
       </div>
-      <div class="card">
-        <h2>Klimaat op 1,30 m — middenin</h2>
-        <div class="grid4" id="r-dubbel-klimaat"></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stitle">RV-profiel langs de toren-as</div>
-      <div class="cw"><canvas id="cvs-hoogte-profiel" width="520" height="210"></canvas></div>
-      <div class="stitle" style="margin-top:.6rem">Temperatuurprofiel langs de toren-as</div>
-      <div class="cw"><canvas id="cvs-temp-profiel" width="520" height="210"></canvas></div>
-      <div class="stitle" style="margin-top:.6rem">Bovenaanzicht — invloedszones</div>
-      <div class="cw"><canvas id="cvs-dubbel-top" width="520" height="240"></canvas></div>
-      <div class="stitle" style="margin-top:.6rem">Zijaanzicht</div>
-      <div class="cw"><canvas id="cvs-dubbel-side" width="520" height="175"></canvas></div>
+      <input type="range" id="sl-spacing" min="2" max="25" step="0.5" value="10"
+             oninput="onSpacing(this.value)"
+             style="flex:1;height:6px;accent-color:var(--green);cursor:pointer;min-width:200px">
+      <div class="grid4" id="r-dubbel-cards" style="flex:2;min-width:300px"></div>
     </div>
   </div>
+
+  <!-- ── Drie kolommen: zijaanzicht | bovenaanzicht | metrics ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+
+    <!-- Bovenaanzicht groot -->
+    <div>
+      <div class="stitle" style="margin-bottom:.4rem">Bovenaanzicht — invloedszones &amp; overlap</div>
+      <div class="cw"><canvas id="cvs-dubbel-top" width="600" height="380"></canvas></div>
+    </div>
+
+    <!-- Zijaanzicht groot -->
+    <div>
+      <div class="stitle" style="margin-bottom:.4rem">Zijaanzicht — cold air lake &amp; spreading</div>
+      <div class="cw"><canvas id="cvs-dubbel-side" width="600" height="380"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Dwarsprofielen naast elkaar ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div>
+      <div class="stitle" style="margin-bottom:.4rem">RV-profiel langs de as (alle hoogtes)</div>
+      <div class="cw"><canvas id="cvs-hoogte-profiel" width="560" height="260"></canvas></div>
+    </div>
+    <div>
+      <div class="stitle" style="margin-bottom:.4rem">Temperatuurprofiel langs de as (alle hoogtes)</div>
+      <div class="cw"><canvas id="cvs-temp-profiel" width="560" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Klimaat-metrics onderaan vol-breed ── -->
+  <div style="background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r-lg);
+              padding:1rem 1.25rem;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+    <h2 style="font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:var(--gray-500);margin-bottom:.75rem">Klimaat op 1,30 m — gewashoogte middenin</h2>
+    <div class="grid4" id="r-dubbel-klimaat"></div>
+    <div style="margin-top:.75rem" id="r-dubbel-zone"></div>
+  </div>
+
 </section>
 
 <!-- ═══════ TAB 4 — PER HECTARE ═══════ -->
@@ -1636,7 +1663,11 @@ function refreshSliderValues() {
 }
 function onSpacing(val) {
   S.spacing = +val;
-  document.getElementById('sv-spacing').textContent = r1(+val) + ' m';
+  const lbl = r1(+val) + ' m';
+  const el1 = document.getElementById('sv-spacing');
+  const el2 = document.getElementById('sv-spacing-big');
+  if (el1) el1.textContent = lbl;
+  if (el2) el2.textContent = lbl;
   renderDubbel(compute());
 }
 
@@ -2113,7 +2144,8 @@ function renderHectare(c) {
 // ═══════════════════════════════════════════════════════════════
 function renderDubbel(c) {
   const la=computeLuchtaanzuiging();
-  const dRV=Math.min(50,la.moistAdd*8);
+  const AH_sat_m = 4.849*Math.exp(0.0653*la.Tin);
+  const dRV=Math.min(65, la.moistAdd*1000/AH_sat_m*100);
   const rv130=Math.min(99,la.RVin+dRV*0.65*0.5);
   const t130=la.Tout+(la.Tin-la.Tout)*0.35;
   const vd130=calcVD(t130,rv130);
@@ -2228,7 +2260,10 @@ function rvOpHoogte(h, x, spacing, la, radius) {
   const inf2 = _towerInfluence(x, spacing, radius);
   const influence = Math.min(1, inf1 + inf2 * 0.85); // 2e toren iets minder
   const hDecay = _heightDecay(h);
-  const dRV_max = Math.min(55, la.moistAdd * 10);  // max RV-stijging bij toren
+  // moistAdd [l/m³] × 1000 = [g/m³] AH-toename
+  // dRV [%] = AH_toename / AH_sat(T) × 100
+  const AH_sat_rv = 4.849 * Math.exp(0.0653 * la.Tin);
+  const dRV_max = Math.min(65, la.moistAdd * 1000 / AH_sat_rv * 100);
   return Math.min(98, la.RVin + dRV_max * influence * hDecay);
 }
 
@@ -2242,104 +2277,215 @@ function tOpHoogte(h, x, spacing, la, radius) {
   const hDecay = _heightDecay(h);
   return la.Tin - la.dT * influence * hDecay;
 }
-function drawProfielCanvas(canvasId,valueFunc,labelFunc,yLabel){
-  const cv=document.getElementById(canvasId);
-  if(!cv) return;
-  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-  const la=computeLuchtaanzuiging(),c=compute();
-  const spacing=S.spacing,radius=c.radius;
-  const pL=44,pR=64,pT=22,pB=32,gW=W-pL-pR,gH=H-pT-pB;
-  const hoogtes=[0,0.5,1.3,2.0,3.0,4.0];
-  const kleuren=['#185FA5','#1D9E75','#EF9F27','#BA7517','#9E9E9E','#616161'];
-  const nPts=120;
+function drawProfielCanvas(canvasId, valueFunc, labelFunc, yLabel, isRV){
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const la = computeLuchtaanzuiging(), c = compute();
+  const spacing = S.spacing, radius = c.radius;
 
-  // Uitgebreid bereik: T1 − margin tot T2 + margin (verval buiten torens zichtbaar)
-  const margin = spacing * 0.35;
-  const xMin = -margin;
-  const xMax = spacing + margin;
-  const xRange = xMax - xMin;
+  // Layout: Y-as = hoogte 0-5m, X-as = horizontale positie
+  const pL = 52, pR = 80, pT = 28, pB = 46;
+  const gW = W - pL - pR, gH = H - pT - pB;
 
-  const allVals=[];
-  hoogtes.forEach(h=>{
-    for(let i=0;i<=nPts;i++) allVals.push(valueFunc(h, xMin + i/nPts*xRange, spacing, la, radius));
-  });
-  const minV=Math.min(...allVals),maxV=Math.max(...allVals);
-  const range=Math.max(0.1,maxV-minV);
+  // X bereik: toren1 - marge tot toren2 + marge
+  const margin = spacing * 0.4;
+  const xMin = -margin, xMax = spacing + margin, xRange = xMax - xMin;
+  const H_MAX = 5.0;
 
-  // Achtergrond zones buiten torens (grijs)
-  const xT1px = pL + (-xMin/xRange)*gW;
-  const xT2px = pL + ((spacing-xMin)/xRange)*gW;
-  ctx.fillStyle='rgba(0,0,0,0.03)';
-  ctx.fillRect(pL, pT, xT1px-pL, gH);
-  ctx.fillRect(xT2px, pT, pL+gW-xT2px, gH);
+  // Helper conversies
+  const xToPx = x => pL + ((x - xMin) / xRange) * gW;
+  const hToPx = h => pT + gH - (h / H_MAX) * gH;
+  const xT1 = xToPx(0), xT2 = xToPx(spacing), xMid = xToPx(spacing/2);
 
-  // Gridlijnen
-  for(let i=0;i<=5;i++){
-    const y=pT+(i/5)*gH;
-    ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=0.5;
-    ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(pL+gW,y);ctx.stroke();
-    ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='right';
-    ctx.fillText(labelFunc(minV+(5-i)/5*range),pL-3,y+3);
+  // ── Bereken waardebereik ──────────────────────────────────────────────────
+  const nX = Math.min(160, Math.round(gW));
+  const nY = Math.min(100, Math.round(gH));
+  let minV = Infinity, maxV = -Infinity;
+  const grid = [];
+  for (let py = 0; py < nY; py++) {
+    const h = H_MAX * (1 - py / nY);
+    const row = [];
+    for (let px = 0; px < nX; px++) {
+      const x = xMin + (px / nX) * xRange;
+      const v = valueFunc(h, x, spacing, la, radius);
+      row.push(v);
+      if (v < minV) minV = v;
+      if (v > maxV) maxV = v;
+    }
+    grid.push(row);
   }
+  // Voor RV: vaste schaal RVin..98, voor T: vaste schaal Twb..Tin
+  if (isRV) { minV = la.RVin; maxV = 98; }
+  else       { minV = la.Tout - 1; maxV = la.Tin + 0.5; }
+  const range = Math.max(0.1, maxV - minV);
 
-  // Toren-positie markeringen
-  [xT1px, xT2px].forEach((xp,ti)=>{
-    ctx.strokeStyle='rgba(29,158,117,0.25)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-    ctx.beginPath();ctx.moveTo(xp,pT);ctx.lineTo(xp,pT+gH);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='#1D9E75';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-    ctx.fillText('T'+(ti+1),xp,pT+gH+14);
-  });
-  // Midden markering
-  const xMidPx = pL + ((spacing/2-xMin)/xRange)*gW;
-  ctx.strokeStyle='rgba(239,159,39,0.2)';ctx.lineWidth=1;ctx.setLineDash([2,4]);
-  ctx.beginPath();ctx.moveTo(xMidPx,pT);ctx.lineTo(xMidPx,pT+gH);ctx.stroke();ctx.setLineDash([]);
+  // ── Heatmap tekenen ───────────────────────────────────────────────────────
+  const imgData = ctx.createImageData(nX, nY);
+  for (let py = 0; py < nY; py++) {
+    for (let px = 0; px < nX; px++) {
+      const v = grid[py][px];
+      const t = Math.max(0, Math.min(1, (v - minV) / range));
+      let r, g, b;
+      if (isRV) {
+        // Droog (wit/geel) → nat (blauw/groen)
+        if (t < 0.4) {
+          const u = t / 0.4;
+          r = Math.round(255 - u*30);
+          g = Math.round(255 - u*80);
+          b = Math.round(220 - u*20);
+        } else if (t < 0.75) {
+          const u = (t-0.4)/0.35;
+          r = Math.round(225 - u*160);
+          g = Math.round(175 - u*20);
+          b = Math.round(200 - u*110);
+        } else {
+          const u = (t-0.75)/0.25;
+          r = Math.round(65 - u*36);
+          g = Math.round(155 + u*3);
+          b = Math.round(90 - u*51);
+        }
+      } else {
+        // Warm (rood/oranje) → koel (blauw)
+        if (t > 0.6) {
+          const u = (t-0.6)/0.4;
+          r = Math.round(80 + u*175); g = Math.round(60 + u*80); b = Math.round(20 + u*30);
+        } else if (t > 0.25) {
+          const u = (t-0.25)/0.35;
+          r = Math.round(29 + u*51); g = Math.round(158 - u*98); b = Math.round(117 - u*97);
+        } else {
+          const u = t/0.25;
+          r = Math.round(24 + u*5); g = Math.round(95 + u*63); b = Math.round(180 - u*63);
+        }
+      }
+      const i4 = (py * nX + px) * 4;
+      imgData.data[i4]=r; imgData.data[i4+1]=g; imgData.data[i4+2]=b; imgData.data[i4+3]=230;
+    }
+  }
+  // Schaal imgData naar canvas
+  const tmp = document.createElement('canvas');
+  tmp.width = nX; tmp.height = nY;
+  tmp.getContext('2d').putImageData(imgData, 0, 0);
+  ctx.drawImage(tmp, pL, pT, gW, gH);
 
-  // Curves per hoogte
-  hoogtes.forEach((h,hi)=>{
-    const pts=[];
-    for(let i=0;i<=nPts;i++) pts.push(valueFunc(h, xMin+i/nPts*xRange, spacing, la, radius));
-    ctx.strokeStyle=kleuren[hi];
-    ctx.lineWidth=h===1.3?2.5:h===0?2:1.2;
-    ctx.setLineDash(h===0?[]:[h===1.3?[]:[5,3]][0]);
-    ctx.globalAlpha=h===1.3?1:h===0?0.9:0.7;
+  // ── Rand om heatmap ───────────────────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.5;
+  ctx.strokeRect(pL, pT, gW, gH);
+
+  // ── Isolines (contourlijnen bij vaste waarden) ────────────────────────────
+  const isoVals = isRV
+    ? [40, 50, 60, 70, 80, 90]
+    : [la.Tout+1, la.Tout+2, la.Tout+4, la.Tout+6, la.Tout+8];
+
+  isoVals.forEach(iso => {
     ctx.beginPath();
-    pts.forEach((v,i)=>{
-      const px=pL+(i/nPts)*gW,py=pT+gH-((v-minV)/range)*gH;
-      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-    });
-    ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
-
-    // Label rechts
-    const lastV=pts[nPts];
-    const py=Math.max(pT+6,Math.min(pT+gH-2, pT+gH-((lastV-minV)/range)*gH));
-    ctx.font=h===1.3?'bold 9px sans-serif':'8.5px sans-serif';
-    ctx.fillStyle=kleuren[hi];ctx.textAlign='left';
-    ctx.fillText((h===1.3?'▶ ':'')+h+'m: '+labelFunc(lastV),pL+gW+3,py+3);
+    let started = false;
+    for (let px = 0; px < nX-1; px++) {
+      for (let py = 0; py < nY-1; py++) {
+        const v00 = grid[py][px], v10 = grid[py][px+1];
+        if ((v00-iso)*(v10-iso) < 0) {
+          const fx = px + (iso-v00)/(v10-v00);
+          const cx2 = pL + (fx/nX)*gW;
+          const cy2 = pT + (py/nY)*gH + gH/nY/2;
+          if (!started) { ctx.moveTo(cx2, cy2); started=true; }
+          else ctx.lineTo(cx2, cy2);
+        }
+      }
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 0.8; ctx.setLineDash([3,4]); ctx.stroke(); ctx.setLineDash([]);
+    // Label op isoline
+    const midX = pL + gW*0.5;
+    const midY_isoline = pT + gH - ((iso-minV)/range)*gH;
+    if (midY_isoline > pT+10 && midY_isoline < pT+gH-6) {
+      ctx.font = '8px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.textAlign = 'center';
+      ctx.fillText(labelFunc(iso), midX, midY_isoline + 3);
+    }
   });
 
-  // Midden annotatie (1.3m = gewashoogte)
-  const midVal=valueFunc(1.3, spacing/2, spacing, la, radius);
-  const midY=pT+gH-((midVal-minV)/range)*gH;
-  ctx.beginPath();ctx.arc(xMidPx,midY,4,0,Math.PI*2);
-  ctx.fillStyle='#EF9F27';ctx.fill();
-  ctx.font='bold 9px sans-serif';ctx.fillStyle='#EF9F27';ctx.textAlign='center';
-  ctx.fillText('Midden 1,3m: '+labelFunc(midVal),xMidPx,pT+10);
-
-  // X-as labels
-  ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='center';
-  ctx.fillText(r1(-margin)+'m',pL,pT+gH+26);
-  ctx.fillText('0',xT1px,pT+gH+26);
-  ctx.fillText(r1(spacing/2)+'m',xMidPx,pT+gH+26);
-  ctx.fillText(r1(spacing)+'m',xT2px,pT+gH+26);
-  ctx.fillText(r1(spacing+margin)+'m',pL+gW,pT+gH+26);
-
+  // ── Y-as (hoogte 0-5m) ────────────────────────────────────────────────────
+  [0, 0.5, 1.0, 1.3, 2.0, 3.0, 4.0, 5.0].forEach(h => {
+    const y = hToPx(h);
+    const isGewas = h === 1.3;
+    ctx.strokeStyle = isGewas ? 'rgba(239,159,39,0.7)' : 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = isGewas ? 1.5 : 0.5; ctx.setLineDash(isGewas ? [5,3] : [2,4]);
+    ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(pL+gW, y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = isGewas ? 'bold 9px sans-serif' : '8px sans-serif';
+    ctx.fillStyle = isGewas ? '#EF9F27' : '#aaa';
+    ctx.textAlign = 'right';
+    ctx.fillText(h === 1.3 ? '1.3m' : h + 'm', pL - 4, y + 3);
+  });
   // Y-as label
-  ctx.save();ctx.translate(12,pT+gH/2);ctx.rotate(-Math.PI/2);
-  ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='center';ctx.fillText(yLabel,0,0);ctx.restore();
+  ctx.save(); ctx.translate(13, pT + gH/2); ctx.rotate(-Math.PI/2);
+  ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+  ctx.fillText('hoogte (m)', 0, 0); ctx.restore();
+
+  // ── X-as toren-posities ───────────────────────────────────────────────────
+  [[xT1,'T1','#1D9E75'],[xT2,'T2','#185FA5'],[xMid,'midden','rgba(239,159,39,0.8)']].forEach(([xp,lbl,col])=>{
+    ctx.strokeStyle = col; ctx.lineWidth = lbl==='midden'?1:1.5;
+    ctx.setLineDash(lbl==='midden'?[3,4]:[]);
+    ctx.beginPath(); ctx.moveTo(xp, pT); ctx.lineTo(xp, pT+gH); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = col; ctx.textAlign = 'center';
+    ctx.fillText(lbl, xp, pT+gH+18);
+  });
+
+  // ── X-as labels (afstand in m) ────────────────────────────────────────────
+  ctx.font = '8px sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+  [-margin, 0, spacing/2, spacing, spacing+margin].forEach(x => {
+    ctx.fillText(r1(x)+'m', xToPx(x), pT+gH+30);
+  });
+  ctx.fillText('afstand (m)', pL+gW/2, pT+gH+42);
+
+  // ── Kleurschaal legenda ───────────────────────────────────────────────────
+  const lx = W - pR + 12, lH = gH;
+  const legGrad = ctx.createLinearGradient(0, pT, 0, pT+lH);
+  if (isRV) {
+    legGrad.addColorStop(0,   'rgb(29,140,90)');
+    legGrad.addColorStop(0.4, 'rgb(65,155,90)');
+    legGrad.addColorStop(0.7, 'rgb(195,155,190)');
+    legGrad.addColorStop(1,   'rgb(255,255,220)');
+  } else {
+    legGrad.addColorStop(0,   'rgb(255,140,50)');
+    legGrad.addColorStop(0.4, 'rgb(29,158,117)');
+    legGrad.addColorStop(1,   'rgb(24,95,180)');
+  }
+  ctx.fillStyle = legGrad; ctx.fillRect(lx, pT, 14, lH);
+  ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=0.5; ctx.strokeRect(lx,pT,14,lH);
+  ctx.font='8px sans-serif'; ctx.fillStyle='#666'; ctx.textAlign='left';
+  ctx.fillText(labelFunc(maxV), lx+17, pT+8);
+  ctx.fillText(labelFunc((maxV+minV)/2), lx+17, pT+lH/2+4);
+  ctx.fillText(labelFunc(minV), lx+17, pT+lH-2);
+  // Legenda titel
+  ctx.save(); ctx.translate(W-pR+3, pT+lH/2); ctx.rotate(-Math.PI/2);
+  ctx.font='bold 8px sans-serif'; ctx.fillStyle='#888'; ctx.textAlign='center';
+  ctx.fillText(yLabel, 0, 0); ctx.restore();
+
+  // ── Waarde annotaties op sleutelposities ──────────────────────────────────
+  [[0, 1.3,'T1 1.3m'],[spacing/2, 1.3,'mid 1.3m'],[spacing, 1.3,'T2 1.3m'],
+   [spacing/2, 0.5,'mid 0.5m'],[spacing/2, 3,'mid 3m']].forEach(([x,h,lbl])=>{
+    const v = valueFunc(h, x, spacing, la, radius);
+    const px2 = xToPx(x), py2 = hToPx(h);
+    ctx.beginPath(); ctx.arc(px2, py2, 3, 0, Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.8; ctx.stroke();
+    ctx.font='bold 8px sans-serif'; ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.textAlign='center';
+    ctx.fillText(labelFunc(v), px2, py2-6);
+  });
 }
-function drawHoogteProfiel(){drawProfielCanvas('cvs-hoogte-profiel',(h,x,sp,la,r)=>rvOpHoogte(h,x,sp,la,r),v=>Math.round(v)+'%','RV %');}
-function drawTempProfiel(){drawProfielCanvas('cvs-temp-profiel',(h,x,sp,la,r)=>tOpHoogte(h,x,sp,la,r),v=>v.toFixed(1)+'°','Temp °C');}
+
+function drawHoogteProfiel(){
+  drawProfielCanvas('cvs-hoogte-profiel',
+    (h,x,sp,la,r)=>rvOpHoogte(h,x,sp,la,r),
+    v=>Math.round(v)+'%', 'RV %', true);
+}
+function drawTempProfiel(){
+  drawProfielCanvas('cvs-temp-profiel',
+    (h,x,sp,la,r)=>tOpHoogte(h,x,sp,la,r),
+    v=>v.toFixed(1)+'°', 'Temp °C', false);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CANVAS — TOREN DOORSNEDE
@@ -2463,6 +2609,128 @@ function drawVenturiChart(c) {
 // CANVAS — DUBBEL TOP & SIDE
 // ═══════════════════════════════════════════════════════════════
 function drawDubbelTop(c,spacing,radius){
+  const cv=document.getElementById('cvs-dubbel-top');
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Schaal: torens + 40% marge aan elke kant
+  const margin=radius*1.3;
+  const totalW=spacing+margin*2;
+  const scale=Math.min((W-60)/totalW,(H-80)/(radius*2+margin*2));
+  const cy=H/2+10;
+  const cx1=W/2-(spacing/2)*scale;
+  const cx2=W/2+(spacing/2)*scale;
+  const r=radius*scale;
+
+  // ── Achtergrond grid ──
+  ctx.strokeStyle='rgba(0,0,0,0.04)';ctx.lineWidth=0.5;
+  for(let i=0;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}
+  for(let i=0;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+
+  // ── Gradient invloedszones (vloeiend verval) ──
+  const drawZone=(cx,col)=>{
+    const steps=12;
+    for(let i=steps;i>=1;i--){
+      const ri=r*(i/steps);
+      const alpha=0.22*(1-(i-1)/steps)*(i/steps);
+      ctx.beginPath();ctx.arc(cx,cy,ri,0,Math.PI*2);
+      ctx.fillStyle=col;ctx.globalAlpha=alpha;ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // Buitenring gestippeld
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=col;ctx.globalAlpha=0.45;ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+  };
+
+  drawZone(cx1,'#1D9E75');
+  drawZone(cx2,'#185FA5');
+
+  // ── Overlap zone ──
+  if(cx2-cx1 < r*1.9){
+    ctx.save();
+    ctx.beginPath();ctx.arc(cx1,cy,r,0,Math.PI*2);ctx.clip();
+    ctx.beginPath();ctx.arc(cx2,cy,r,0,Math.PI*2);
+    const grad=ctx.createRadialGradient(cx1,cy,0,cx1,cy,r);
+    grad.addColorStop(0,'rgba(29,158,117,0.35)');
+    grad.addColorStop(1,'rgba(29,158,117,0.08)');
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.restore();
+    // Label overlap
+    const xMid=(cx1+cx2)/2;
+    ctx.font='bold 11px sans-serif';ctx.fillStyle='rgba(8,80,65,0.7)';ctx.textAlign='center';
+    ctx.fillText('overlap',xMid,cy+4);
+  }
+
+  // ── VD-verloopcirkels (contourlijnen) ──
+  [0.85,0.65,0.45].forEach((frac,fi)=>{
+    const col=['rgba(29,158,117,0.18)','rgba(29,158,117,0.10)','rgba(29,158,117,0.05)'][fi];
+    [cx1,cx2].forEach(cx=>{
+      ctx.beginPath();ctx.arc(cx,cy,r*frac,0,Math.PI*2);
+      ctx.strokeStyle=col;ctx.lineWidth=1;ctx.setLineDash([3,5]);
+      ctx.stroke();ctx.setLineDash([]);
+    });
+  });
+
+  // ── Toren symbolen ──
+  [[cx1,'#1D9E75','Toren 1'],[cx2,'#185FA5','Toren 2']].forEach(([x,col,lbl])=>{
+    const tr=13;
+    // Schaduw
+    ctx.beginPath();ctx.arc(x+2,cy+2,tr,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fill();
+    // Toren cirkel
+    ctx.beginPath();ctx.arc(x,cy,tr,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+    // Kruis binnenin
+    ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x-5,cy);ctx.lineTo(x+5,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,cy-5);ctx.lineTo(x,cy+5);ctx.stroke();
+    // Label
+    ctx.font='bold 12px sans-serif';ctx.fillStyle=col;ctx.textAlign='center';
+    ctx.fillText(lbl,x,cy+tr+18);
+    ctx.font='10px sans-serif';ctx.fillStyle='rgba(0,0,0,0.4)';
+    ctx.fillText('r='+r1(radius)+'m',x,cy-r-10);
+  });
+
+  // ── Afstandspijl ──
+  const ay=cy-r*0.65;
+  ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(cx1,ay);ctx.lineTo(cx2,ay);ctx.stroke();
+  [[cx1,1],[cx2,-1]].forEach(([x,d])=>{
+    ctx.beginPath();ctx.moveTo(x,ay);
+    ctx.lineTo(x+d*9,ay-4);ctx.lineTo(x+d*9,ay+4);ctx.closePath();
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fill();
+  });
+  ctx.font='bold 11px sans-serif';ctx.fillStyle='rgba(0,0,0,0.55)';ctx.textAlign='center';
+  ctx.fillText(spacing+' m hart-op-hart',(cx1+cx2)/2,ay-10);
+
+  // ── Legenda ──
+  const leg=[
+    ['rgba(29,158,117,0.55)','Sterk effect (nabij)'],
+    ['rgba(29,158,117,0.25)','Matig effect'],
+    ['rgba(29,158,117,0.10)','Zwak effect (grens)'],
+  ];
+  leg.forEach(([col,lbl],i)=>{
+    ctx.fillStyle=col;ctx.fillRect(16,H-56+i*17,14,10);
+    ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=0.5;ctx.strokeRect(16,H-56+i*17,14,10);
+    ctx.font='10px sans-serif';ctx.fillStyle='rgba(0,0,0,0.5)';ctx.textAlign='left';
+    ctx.fillText(lbl,36,H-56+i*17+9);
+  });
+
+  // ── Schaalbalk ──
+  const barM=Math.max(2,Math.round(radius)),barPx=barM*scale;
+  const bx=W-70,by=H-18;
+  ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+barPx,by);ctx.stroke();
+  [[bx,0],[bx+barPx,0]].forEach(([x])=>{
+    ctx.beginPath();ctx.moveTo(x,by-5);ctx.lineTo(x,by+5);ctx.stroke();
+  });
+  ctx.font='10px sans-serif';ctx.fillStyle='rgba(0,0,0,0.4)';ctx.textAlign='center';
+  ctx.fillText(barM+'m',bx+barPx/2,by-8);
+}
+function drawDubbelTop(c,spacing,radius){
   const cv=document.getElementById('cvs-dubbel-top');if(!cv) return;
   const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
   ctx.clearRect(0,0,W,H);
@@ -2554,6 +2822,152 @@ function drawDubbelTop(c,spacing,radius){
   ctx.beginPath();ctx.moveTo(bx+barPx,by-4);ctx.lineTo(bx+barPx,by+4);ctx.stroke();
   ctx.font='9px sans-serif';ctx.fillStyle='rgba(0,0,0,0.4)';ctx.textAlign='center';
   ctx.fillText(barM+'m',bx+barPx/2,by+14);
+}
+function drawDubbelSide(c,spacing){
+  const cv=document.getElementById('cvs-dubbel-side');
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const ground=H-50;
+  const tH=totalH();
+  const margin=spacing*0.18;
+  const totalSpan=spacing+margin*2;
+  const xScale=(W-80)/totalSpan;
+  const hScale=(H-90)/tH;
+  const cx1=W/2-(spacing/2)*xScale;
+  const cx2=W/2+(spacing/2)*xScale;
+  const towerH=tH*hScale;
+  const sc=hScale;
+
+  // ── Achtergrond ──
+  ctx.fillStyle='#f9f7f2';ctx.fillRect(0,0,W,ground);
+
+  // ── Kas-dak lijn ──
+  const kasH=4000; // mm kasdak
+  const yKas=ground-kasH*hScale;
+  if(yKas>10){
+    ctx.strokeStyle='rgba(180,178,170,0.5)';ctx.lineWidth=1;ctx.setLineDash([8,5]);
+    ctx.beginPath();ctx.moveTo(0,yKas);ctx.lineTo(W,yKas);ctx.stroke();ctx.setLineDash([]);
+    ctx.font='9px sans-serif';ctx.fillStyle='rgba(150,148,140,0.7)';ctx.textAlign='left';
+    ctx.fillText('kasdak 4m',6,yKas-4);
+  }
+
+  // ── Gewashoogte lijn ──
+  const yGewas=ground-1300*hScale;
+  ctx.strokeStyle='rgba(239,159,39,0.45)';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(30,yGewas);ctx.lineTo(W-10,yGewas);ctx.stroke();ctx.setLineDash([]);
+  ctx.font='9px sans-serif';ctx.fillStyle='rgba(186,117,23,0.8)';ctx.textAlign='left';
+  ctx.fillText('gewashoogte 1,3m',6,yGewas-4);
+
+  // ── Cold air lake gradient ──
+  const coldH=Math.min(ground*0.22,45);
+  const lakeGrad=ctx.createLinearGradient(0,ground-coldH,0,ground);
+  lakeGrad.addColorStop(0,'rgba(29,158,117,0)');
+  lakeGrad.addColorStop(0.5,'rgba(29,158,117,0.07)');
+  lakeGrad.addColorStop(1,'rgba(29,158,117,0.22)');
+  ctx.fillStyle=lakeGrad;
+  ctx.fillRect(cx1-(spacing*xScale*0.25),ground-coldH,cx2-cx1+(spacing*xScale*0.5),coldH);
+
+  // ── Spreading-pijlen ──
+  const arrowY=ground-coldH*0.45;
+  const arrowLen=spacing*xScale*0.28;
+  [[cx1,-1,'links'],[cx2,1,'rechts']].forEach(([x,d,lbl])=>{
+    ctx.strokeStyle='rgba(29,158,117,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(x,arrowY);ctx.lineTo(x+d*arrowLen,arrowY);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(x+d*arrowLen,arrowY);
+    ctx.lineTo(x+d*(arrowLen-10),arrowY-4);ctx.lineTo(x+d*(arrowLen-10),arrowY+4);
+    ctx.closePath();ctx.fillStyle='rgba(29,158,117,0.5)';ctx.fill();
+    ctx.font='9px sans-serif';ctx.fillStyle='rgba(29,158,117,0.75)';
+    ctx.textAlign=d>0?'left':'right';
+    ctx.fillText('gravity current',x+d*(arrowLen+4),arrowY+4);
+  });
+
+  // ── Torens tekenen ──
+  const drawToren=(cx,col,lbl)=>{
+    const rTop=G.D_top*sc/2, rK=G.D_throat*sc/2;
+    const rM=G.D_mid>0?G.D_mid*sc/2:rK, rB=G.D_bot*sc/2;
+    const yTop=ground-towerH;
+    const yK=ground-towerH*(1-G.H_top/tH);
+    const yM=ground-towerH*(G.H_bot/tH);
+    const yBot=ground;
+
+    // Toren profiel gradient fill
+    const tGrad=ctx.createLinearGradient(0,yTop,0,yBot);
+    tGrad.addColorStop(0,'rgba(239,159,39,0.18)');
+    tGrad.addColorStop(0.55,'rgba(29,158,117,0.15)');
+    tGrad.addColorStop(1,'rgba(29,158,117,0.30)');
+
+    ctx.beginPath();
+    ctx.moveTo(cx-rTop,yTop);ctx.lineTo(cx-rK,yK);
+    ctx.lineTo(cx-rM,yM);ctx.lineTo(cx-rB,yBot);
+    ctx.lineTo(cx+rB,yBot);ctx.lineTo(cx+rM,yM);
+    ctx.lineTo(cx+rK,yK);ctx.lineTo(cx+rTop,yTop);
+    ctx.closePath();
+    ctx.fillStyle=tGrad;ctx.fill();
+    ctx.strokeStyle=col;ctx.globalAlpha=0.85;ctx.lineWidth=2;ctx.stroke();ctx.globalAlpha=1;
+
+    // Venturikeel markering
+    ctx.beginPath();ctx.moveTo(cx-rK-8,yK);ctx.lineTo(cx+rK+8,yK);
+    ctx.strokeStyle='rgba(239,159,39,0.35)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+
+    // Nozzle ringen
+    const yN1=yTop+(yK-yTop)*0.30, rN1=rTop+(rK-rTop)*0.30;
+    const yN2=yTop+(yK-yTop)*0.60, rN2=rTop+(rK-rTop)*0.60;
+    [[yN1,rN1,'#BA7517'],[yN2,rN2,'#185FA5']].forEach(([y,r2,c2])=>{
+      ctx.beginPath();ctx.ellipse(cx,y,r2*0.55,4,0,0,Math.PI*2);
+      ctx.fillStyle=c2;ctx.globalAlpha=0.65;ctx.fill();ctx.globalAlpha=1;
+    });
+
+    // Label + hoogte
+    ctx.font='bold 11px sans-serif';ctx.fillStyle=col;ctx.textAlign='center';
+    ctx.fillText(lbl,cx,yTop-14);
+    ctx.font='10px sans-serif';ctx.fillStyle='rgba(0,0,0,0.35)';
+    ctx.fillText((tH/1000).toFixed(1)+'m',cx,yTop-3);
+
+    // Lucht-in pijl
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.globalAlpha=0.6;
+    ctx.beginPath();ctx.moveTo(cx,yTop-28);ctx.lineTo(cx,yTop-2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-5,yTop-8);ctx.lineTo(cx,yTop-2);ctx.lineTo(cx+5,yTop-8);ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // Lucht-uit pijlen (naar buiten)
+    const yOut=yBot+10;
+    [[-rB*0.6,1],[rB*0.6,-1]].forEach(([dx,d])=>{
+      ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.globalAlpha=0.5;
+      ctx.beginPath();ctx.moveTo(cx+dx,yOut);ctx.lineTo(cx+dx+d*20,yOut+15);ctx.stroke();
+      ctx.globalAlpha=1;
+    });
+  };
+
+  drawToren(cx1,'#1D9E75','Toren 1');
+  drawToren(cx2,'#185FA5','Toren 2');
+
+  // ── Grond ──
+  const groundGrad=ctx.createLinearGradient(0,ground,0,H);
+  groundGrad.addColorStop(0,'#c8c5bc');groundGrad.addColorStop(1,'#aca9a0');
+  ctx.fillStyle=groundGrad;ctx.fillRect(0,ground,W,H-ground);
+  ctx.strokeStyle='#b0ae9a';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(W,ground);ctx.stroke();
+  // Grond arcering
+  ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=0.7;
+  for(let xi=0;xi<W;xi+=12){
+    ctx.beginPath();ctx.moveTo(xi,ground);ctx.lineTo(xi-8,ground+10);ctx.stroke();
+  }
+
+  // ── Afstandslabel ──
+  const ay2=ground+28;
+  ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(cx1,ground+6);ctx.lineTo(cx2,ground+6);ctx.stroke();ctx.setLineDash([]);
+  ctx.font='bold 11px sans-serif';ctx.fillStyle='rgba(0,0,0,0.45)';ctx.textAlign='center';
+  ctx.fillText(spacing+' m',(cx1+cx2)/2,ground+22);
+
+  // ── h_grond label ──
+  if((G.h_grond||0)>0){
+    const yVloer=ground+(G.h_grond/tH)*towerH*0.5;
+    ctx.font='9px sans-serif';ctx.fillStyle='rgba(186,117,23,0.7)';
+    ctx.textAlign='left';ctx.fillText('h_grond='+G.h_grond+'mm',cx2+G.D_bot*sc/2+6,ground-3);
+  }
 }
 function drawDubbelSide(c,spacing){
   const cv=document.getElementById('cvs-dubbel-side');if(!cv) return;
