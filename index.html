@@ -206,12 +206,16 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
 <!-- ═══════ TAB 0 — VALIDATIE ═══════ -->
 <section id="tab-validatie" class="tp act">
   <div class="val-header">
-    <h1>Schaalmodel Validatie — Ø700 × 2000 mm · 6 meetreeksen</h1>
-    <p>CoolFlow klimaatkastmetingen · Ikeuchi KBN 80125 (rood) &amp; KBN 80063 (groen) · Ringleiding Ø680 mm · Februari 2026</p>
+    <h1>Schaalmodel Validatie — Ø700 × 2000 mm · 5 meetreeksen</h1>
+    <p>CoolFlow klimaatkastmetingen · Ikeuchi KBN 80125 (rood) &amp; KBN 80063 (groen) · Ringleiding Ø680 mm · Venturi Ø500 mm keel · Februari 2026</p>
   </div>
   <div class="card" style="margin-bottom:.9rem">
     <h2>Kalibratie-conclusie</h2>
     <div id="val-conclusion"></div>
+  </div>
+  <div class="card" style="margin-bottom:.9rem">
+    <h2>Schaalmodel specificaties</h2>
+    <div id="val-schaal-specs"></div>
   </div>
   <div class="card" style="margin-bottom:.9rem">
     <h2>Wat betekent C? — uitleg discharge-coëfficiënt</h2>
@@ -438,7 +442,13 @@ footer { border-top: 1px solid var(--gray-300); background: var(--white); margin
 const HVAP   = 2450;
 const CP_AIR = 1.006;
 const RHO    = 1.15;
-const ETA_EJ = 0.493;  // kg lucht/N — kalibratie 8R+8G reeksen
+const ETA_EJ     = 0.493;  // kg lucht/N @ referentie-keelsnelheid schaalmodel
+const V_KEEL_REF = 1.422;  // m/s gemiddelde keelsnelheid schaalmodel Ø500mm (5 reeksen)
+// Venturi: η_ej schaalt met keelsnelheid (hogere v_keel = betere momentum-overdracht)
+function eta_ej_scaled(v_keel_ms) {
+  if (!v_keel_ms || v_keel_ms <= 0) return ETA_EJ;
+  return ETA_EJ * Math.min(2.0, Math.max(0.5, v_keel_ms / V_KEEL_REF));
+}
 
 // ═══════════════════════════════════════════════════════════════
 // NOZZLE DATA — Ikeuchi KBN serie (Japan)
@@ -490,13 +500,26 @@ const S = {
 // ═══════════════════════════════════════════════════════════════
 // MEETDATA — 6 CoolFlow testreeksen (steady-state gemiddelden)
 // ═══════════════════════════════════════════════════════════════
-// C_meas = C_stack herijkt | W_inj = ingespoten (datasheet @ 3 bar) | W_max = dAH×V/1000
+// Schaalmodel geometrie:
+//   D_inlaat  = 700 mm  (A = 0.3848 m²)
+//   D_venturi = 500 mm  (A = 0.1963 m²)  → A-reductie = 51%
+//   Hoogte    = 2000 mm
+// C_meas = C_stack herijkt | W_inj = ingespoten @ 3 bar (datasheet) | W_max = dAH×V/1000
+// v_venturi = V_m3h / A_venturi (keelsnelheid in het schaalmodel)
+const SCHAAL = {
+  D_inlaat:  700,   // mm
+  D_venturi: 500,   // mm  ← venturi-keel schaalmodel
+  H:        2000,   // mm
+  A_inlaat:  Math.PI*(0.350)**2,  // 0.3848 m²
+  A_venturi: Math.PI*(0.250)**2,  // 0.1963 m²
+};
 const MEETDATA = [
-  { test:'8red',         label:'8R',       n_red:8, n_green:0, T_in:29.99, RH_in:51.11, V_in:0.8032, T_out:22.11, dT:7.88,  V_m3h:1050.1, water_hr:4.13, C_meas:0.631, W_inj:17.97, W_max:17.6 },
-  { test:'4red',         label:'4R',       n_red:4, n_green:0, T_in:29.72, RH_in:29.77, V_in:0.6146, T_out:17.69, dT:12.03, V_m3h:803.5,  water_hr:4.88, C_meas:0.417, W_inj:8.98,  W_max:19.1 },
-  { test:'4red_4green',  label:'4R+4G',    n_red:4, n_green:4, T_in:30.56, RH_in:45.39, V_in:0.7151, T_out:21.19, dT:9.37,  V_m3h:934.9,  water_hr:3.97, C_meas:0.543, W_inj:13.36, W_max:18.2 },
-  { test:'4green_extra', label:'4G(extra)',n_red:0, n_green:4, T_in:31.84, RH_in:36.67, V_in:0.8447, T_out:21.13, dT:10.72, V_m3h:1104.3, water_hr:6.66, C_meas:0.654, W_inj:4.38,  W_max:27.1 },
-  { test:'8green',       label:'8G',       n_red:0, n_green:8, T_in:29.12, RH_in:46.53, V_in:0.8657, T_out:20.73, dT:8.40,  V_m3h:1131.8, water_hr:5.12, C_meas:0.728, W_inj:8.76,  W_max:19.6 },
+  // v_venturi = V_m3h / 3600 / A_venturi  [m/s in de keel]
+  { test:'8red',         label:'8R',       n_red:8, n_green:0, T_in:29.99, RH_in:51.11, V_in:0.8032, T_out:22.11, dT:7.88,  V_m3h:1050.1, water_hr:4.13, C_meas:0.631, W_inj:17.97, W_max:17.6  },
+  { test:'4red',         label:'4R',       n_red:4, n_green:0, T_in:29.72, RH_in:29.77, V_in:0.6146, T_out:17.69, dT:12.03, V_m3h:803.5,  water_hr:4.88, C_meas:0.417, W_inj:8.98,  W_max:19.1  },
+  { test:'4red_4green',  label:'4R+4G',    n_red:4, n_green:4, T_in:30.56, RH_in:45.39, V_in:0.7151, T_out:21.19, dT:9.37,  V_m3h:934.9,  water_hr:3.97, C_meas:0.543, W_inj:13.36, W_max:18.2  },
+  { test:'4green_extra', label:'4G(extra)',n_red:0, n_green:4, T_in:31.84, RH_in:36.67, V_in:0.8447, T_out:21.13, dT:10.72, V_m3h:1104.3, water_hr:6.66, C_meas:0.654, W_inj:4.38,  W_max:27.1  },
+  { test:'8green',       label:'8G',       n_red:0, n_green:8, T_in:29.12, RH_in:46.53, V_in:0.8657, T_out:20.73, dT:8.40,  V_m3h:1131.8, water_hr:5.12, C_meas:0.728, W_inj:8.76,  W_max:19.6  },
 ];
 const C_MEAN = 0.595;  // herijkt: C_stack na ejector-aftrek (datasheet nozzle flows)
 const C_STD  = 0.120;
@@ -521,7 +544,10 @@ function mc(lbl, val, unit, cls) {
 // ═══════════════════════════════════════════════════════════════
 function simV_m3h(td) {
   // Simuleer luchtdebiet voor een meetreeks met het stack-effect model
-  const H=2.0, g=9.81, At=Math.PI*(0.35)**2;
+  // Schaalmodel: D_inlaat=700mm, D_venturi=500mm → stack via A_venturi
+  const H=2.0, g=9.81;
+  const At = SCHAAL.A_venturi;  // 0.1963 m²  keel schaalmodel
+  const At_in = SCHAAL.A_inlaat; // 0.3848 m²  inlaat
   const Tk=273.15+td.T_in;
   const dT=td.dT;
   const v_061  = 0.61  * Math.sqrt(2*g*H*dT/Tk);
@@ -543,6 +569,9 @@ function renderValidatie() {
       ${mc('η_ej ejector', '2.3', 'kg lucht / N (datasheet nozzle flows)', 'ok')}
       ${mc('C theoretisch', '0.610', 'puur stack-effect', 'wn')}
       ${mc('V schaalmodel', '803–1200', 'm³/h gemeten', 'hi')}
+      ${mc('D inlaat schaal', '700', 'mm (Ø inlaat toren)', '')}
+      ${mc('D venturi keel', '500', 'mm (Ø keel schaalmodel)', 'wn')}
+      ${mc('A-reductie', r1((1-SCHAAL.A_venturi/SCHAAL.A_inlaat)*100)+'%', 'Ø700→Ø500', 'wn')}
       ${mc('Ejector bijdrage', '0–136', 'm³/h per reeks', 'hi')}
       ${mc('Reeksen', '5', 'valide metingen', 'ok')}
     </div>
@@ -575,6 +604,9 @@ function renderValidatie() {
       ${mc('RV inlaat', td.RH_in, '%', '')}
       ${mc('ΔT gemeten', td.dT, 'K', 'hi')}
       ${mc('Q gemeten', Math.round(td.V_m3h), 'm³/h', 'hi')}
+      ${mc('v inlaat Ø700', td.V_in.toFixed(3), 'm/s gemeten', '')}
+      ${mc('v venturi Ø500', r2(td.V_m3h/3600/SCHAAL.A_venturi), 'm/s (V/A_keel)', 'hi')}
+      ${mc('A-reductie', r1((1-SCHAAL.A_venturi/SCHAAL.A_inlaat)*100)+'%', 'Ø700→Ø500mm', 'wn')}
       ${mc('W ingespoten', td.W_inj?r1(td.W_inj):'—', 'L/h datasheet @ 3 bar', '')}
       ${mc('W max psychro', td.W_max?r1(td.W_max):'—', 'L/h (dAH×V)', td.W_inj&&td.W_inj>td.W_max*1.05?'er':'ok')}
       ${mc('Benutting', W_pct+'%', 'van W_max', W_pct>100?'er':W_pct>80?'wn':'ok')}
@@ -626,6 +658,7 @@ function renderValidatie() {
             <td style="padding:5px 7px;text-align:center">${td.RH_in}%</td>
             <td style="padding:5px 7px;text-align:center">${td.dT} K</td>
             <td style="padding:5px 7px;text-align:center;font-weight:700">${Math.round(td.V_m3h)}</td>
+            <td style="padding:5px 7px;text-align:center;color:var(--blue);font-weight:600">${r2(td.V_m3h/3600/SCHAAL.A_venturi)} m/s</td>
             <td style="padding:5px 7px;text-align:center;color:var(--amber)">${Math.round(sim.V_061)}</td>
             <td style="padding:5px 7px;text-align:center;color:var(--green-dk)">${Math.round(sim.V_cal)}</td>
             <td style="padding:5px 7px;text-align:center;font-weight:700;color:${td.C_meas>0.65?'var(--green-dk)':'var(--red)'}">${td.C_meas.toFixed(3)}</td>
@@ -664,6 +697,7 @@ function renderValidatie() {
     `Gebruik C=${C_MEAN}±${C_STD} als modelparameter voor de volledige toren.`;
 
   C_cal = C_MEAN;
+  renderSchaalSpecs();
   renderCUitleg();
   renderValidatieMatrix();
   drawValidatieCharts();
@@ -809,7 +843,7 @@ function drawValDT() {
   ctx.font='9px sans-serif';ctx.fillStyle='#888';ctx.textAlign='center';ctx.fillText('ΔT (K)',pL+gW/2,pT+gH+28);
 
   // Model curve C=0.61 en C=C_MEAN
-  const H2=2.0,g2=9.81,At2=Math.PI*(0.35)**2,Tk2=303.15;
+  const H2=2.0,g2=9.81,At2=SCHAAL.A_venturi,Tk2=303.15;
   ['#EF9F27','#1D9E75'].forEach((col,ci)=>{
     const C=ci===0?0.61:C_MEAN;
     ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.setLineDash(ci===0?[4,3]:[]);
@@ -847,6 +881,106 @@ function drawValDT() {
 
   ctx.font='bold 10px sans-serif';ctx.fillStyle='#333';ctx.textAlign='center';
   ctx.fillText('ΔT vs. Luchtdebiet — model vs. meting',pL+gW/2,pT-8);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCHAALMODEL SPECS
+// ═══════════════════════════════════════════════════════════════
+function renderSchaalSpecs() {
+  const el = document.getElementById('val-schaal-specs');
+  if (!el) return;
+
+  const A_in  = SCHAAL.A_inlaat;
+  const A_k   = SCHAAL.A_venturi;
+  const red   = (1 - A_k/A_in)*100;
+  const ratio = A_in/A_k;
+
+  // Venturi-snelheden per reeks
+  const vRows = MEETDATA.map(td => {
+    const v_in  = td.V_m3h/3600/A_in;
+    const v_k   = td.V_m3h/3600/A_k;
+    return `<tr style="border-bottom:1px solid var(--gray-100)">
+      <td style="padding:5px 8px;font-weight:700;color:var(--green-dk)">${td.label}</td>
+      <td style="padding:5px 8px;text-align:center">${td.V_m3h.toFixed(0)} m³/h</td>
+      <td style="padding:5px 8px;text-align:center">${v_in.toFixed(3)} m/s</td>
+      <td style="padding:5px 8px;text-align:center;font-weight:700;color:var(--blue)">${v_k.toFixed(3)} m/s</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--amber)">${r2(v_k/v_in)}×</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+
+      <!-- Geometrie toren -->
+      <div style="background:var(--blue-lt);border:1px solid #b5d4f4;border-radius:var(--r);padding:.75rem 1rem">
+        <div style="font-weight:700;font-size:.82rem;color:var(--blue);margin-bottom:.5rem">
+          Schaalmodel geometrie
+        </div>
+        <div style="font-size:.75rem;line-height:1.9;font-family:'Courier New',monospace">
+          D_inlaat   = <strong>${SCHAAL.D_inlaat} mm</strong>  (Ø toren)<br>
+          D_venturi  = <strong>${SCHAAL.D_venturi} mm</strong>  (Ø keel)<br>
+          H_toren    = <strong>${SCHAAL.H} mm</strong><br>
+          A_inlaat   = <strong>${A_in.toFixed(4)} m²</strong><br>
+          A_venturi  = <strong>${A_k.toFixed(4)} m²</strong><br>
+          A-reductie = <strong>${r1(red)}%</strong>  (${r2(ratio)}× versnelling)<br>
+        </div>
+        <div style="margin-top:.5rem;padding:.35rem .6rem;background:var(--amber-lt);
+                    border:1px solid #FAC775;border-radius:var(--r);font-size:.72rem;color:var(--amber)">
+          ⚠ C_MEAN gekalibreerd op dit schaalmodel.<br>
+          Venturi was aanwezig maar CoolFlow mat V_inlaat (Ø700), niet V_keel (Ø500).
+        </div>
+      </div>
+
+      <!-- Nozzle config -->
+      <div style="background:var(--green-lt);border:1px solid #9FE1CB;border-radius:var(--r);padding:.75rem 1rem">
+        <div style="font-weight:700;font-size:.82rem;color:var(--green-dk);margin-bottom:.5rem">
+          Nozzle-configuratie per reeks
+        </div>
+        <div style="font-size:.74rem;line-height:1.9">
+          <strong>8R</strong>: 8× KBN80125 (rood) @ 3 bar<br>
+          <strong>4R</strong>: 4× KBN80125 (rood) @ 3 bar<br>
+          <strong>4R+4G</strong>: 4× rood + 4× groen @ 3 bar<br>
+          <strong>4G(extra)</strong>: 4× KBN80063 (groen) @ 3 bar<br>
+          <strong>8G</strong>: 8× KBN80063 (groen) @ 3 bar<br>
+        </div>
+        <div style="margin-top:.5rem;padding:.35rem .6rem;background:var(--green-lt);
+                    border:1px solid #9FE1CB;border-radius:var(--r);font-size:.72rem;color:var(--green-dk)">
+          Alle reeksen @ 3 bar werkdruk<br>
+          Ringleiding Ø680 mm
+        </div>
+      </div>
+    </div>
+
+    <!-- Venturi-snelheden per reeks -->
+    <div style="font-weight:700;font-size:.78rem;color:var(--gray-700);margin-bottom:.4rem">
+      Keelsnelheid per meetreeks (Ø500mm venturi)
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.74rem">
+        <thead>
+          <tr style="background:var(--gray-900)">
+            <th style="padding:6px 8px;color:rgba(255,255,255,.5);font-weight:500;text-align:left">Reeks</th>
+            <th style="padding:6px 8px;color:rgba(255,255,255,.5);font-weight:500;text-align:center">V gemeten</th>
+            <th style="padding:6px 8px;color:rgba(255,255,255,.5);font-weight:500;text-align:center">v inlaat Ø700</th>
+            <th style="padding:6px 8px;color:#6EDDB8;font-weight:700;text-align:center">v keel Ø500</th>
+            <th style="padding:6px 8px;color:rgba(255,255,255,.5);font-weight:500;text-align:center">Versnelling</th>
+          </tr>
+        </thead>
+        <tbody>${vRows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:.5rem;font-size:.71rem;color:var(--gray-500);line-height:1.6">
+      v_keel = V_gemeten / A_venturi (continuïteit). Referentie voor η_ej-schaling: v_keel_ref = gemiddelde over 5 reeksen.
+    </div>`;
+
+  // Update V_KEEL_REF dynamisch op basis van gemiddelde gemeten keelsnelheid
+  const v_keels = MEETDATA.map(td => td.V_m3h/3600/A_k);
+  const v_ref_gem = v_keels.reduce((a,b)=>a+b,0)/v_keels.length;
+  // V_KEEL_REF is const — toon alleen de gemiddelde waarde
+  const infoEl = document.createElement('div');
+  infoEl.style.cssText='margin-top:.4rem;font-size:.72rem;color:var(--blue);font-weight:600';
+  infoEl.textContent = `Gemiddelde v_keel over 5 reeksen: ${v_ref_gem.toFixed(3)} m/s  (model gebruikt V_KEEL_REF=${V_KEEL_REF} m/s)`;
+  el.appendChild(infoEl);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1149,9 +1283,9 @@ const RINGS = [
   // Productietoren specs: 2 ringen × 8 nozzles = 16 nozzles basis
   // Ring 1: 50mm van bovenzijde, Ring 2: 100mm van bovenzijde (uit tekening)
   // Ring 3: optioneel, lager in de toren voor extra capaciteit
-  { id:'r1', lbl:'Ring 1 (boven)',  pos:'50mm v. boven',  on:true,  nozzle:'80125', nr:8, bar:3 },
-  { id:'r2', lbl:'Ring 2 (midden)', pos:'100mm v. boven', on:true,  nozzle:'80125', nr:8, bar:5 },
-  { id:'r3', lbl:'Ring 3 (extra)',  pos:'venturi-keel',   on:false, nozzle:'80063', nr:6, bar:3 },
+  { id:'r1', lbl:'Ring 1 (boven)',  pos:'50mm v. boven',  on:true, nozzle:'80063', nr:12, bar:3 },
+  { id:'r2', lbl:'Ring 2 (midden)', pos:'100mm v. boven', on:true, nozzle:'80063', nr:12, bar:3 },
+  { id:'r3', lbl:'Ring 3 (keel)',   pos:'venturi-keel',   on:true, nozzle:'80125', nr:12, bar:3 },
 ];
 function activeWater() { return RINGS.reduce((s,r) => s + (r.on ? r.nr * nozzleQ(r.nozzle, r.bar) : 0), 0); }
 
@@ -1257,8 +1391,20 @@ function totalNozzleImpuls() {
     return sum + m_dot * v_noz;
   }, 0);
 }
-function ejectorV_m3h() {
-  return (ETA_EJ * totalNozzleImpuls() / RHO) * 3600;
+function ejectorV_m3h(v_keel_ms) {
+  const J   = totalNozzleImpuls();
+  const eta = v_keel_ms !== undefined ? eta_ej_scaled(v_keel_ms) : ETA_EJ;
+  return (eta * J / RHO) * 3600;
+}
+function computeVtotaal(V_stack_m3s, A_keel_m2) {
+  let V = (V_stack_m3s + ETA_EJ * totalNozzleImpuls() / RHO) * 3600;
+  for (let i = 0; i < 15; i++) {
+    const vk  = V / 3600 / A_keel_m2;
+    const Vn  = V_stack_m3s * 3600 + ejectorV_m3h(vk);
+    if (Math.abs(Vn - V) < 0.5) { V = Vn; break; }
+    V = V * 0.5 + Vn * 0.5;
+  }
+  return V;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1317,13 +1463,16 @@ function compute() {
   }
   dT = Math.max(0, Math.min(dT, 25));
 
-  // Definitieve stroomgrootheden — stack + ejector
+  // Definitieve stroomgrootheden — stack + ejector (venturi iteratief)
+  // Venturi: A_keel(a2) ↓ → v_keel ↑ → η_ej ↑ via eta_ej_scaled()
   const v_stack_fin = dT > 0.05 ? C_eff * Math.sqrt(2 * g * H_eff * dT / Tk) : 0;
-  const V_stack  = v_stack_fin * a2;
-  const V_ej_c   = ejectorV_m3h() / 3600;
-  const Vair     = V_stack + V_ej_c;
-  const v_keel   = a2 > 0 ? Vair / a2 : 0;
-  const Vairh    = Vair * 3600;
+  const V_stack_m3s = v_stack_fin * a2;              // stack via A_keel
+  const Vairh_it    = computeVtotaal(V_stack_m3s, a2); // m³/h iteratief
+  const Vair        = Vairh_it / 3600;
+  const V_stack     = V_stack_m3s;
+  const V_ej_c      = Vair - V_stack_m3s;
+  const v_keel      = a2 > 0 ? Vair / a2 : 0;
+  const Vairh = Vairh_it;  // m³/h totaal (venturi-iteratief)
   const mAir     = Vair * RHO;
   const Tout     = S.Tin - dT;
 
@@ -1377,7 +1526,10 @@ function computeLuchtaanzuiging() {
   const ringDetails=RINGS.map(r=>({lbl:r.lbl,on:r.on,nozzle:r.nozzle,nr:r.nr,bar:r.bar,
     qPerNozzle:nozzleQ(r.nozzle,r.bar),qRing:r.on?r.nr*nozzleQ(r.nozzle,r.bar):0}));
   const wAct=ringDetails.reduce((s,r)=>s+r.qRing,0);
-  const At=Math.PI*(G.D_throat/2000)**2;
+  // Stack gebruikt A_KEEL (klassieke schoorsteen-formule, consistent met validatie)
+  // Venturi-voordeel: A_keel ↓ → v_keel ↑ → η_ej ↑ (via eta_ej_scaled)
+  const At_inlaat = Math.PI*(G.D_top/2000)**2;   // inlaatopening (voor display)
+  const At         = Math.PI*(G.D_throat/2000)**2; // keel = stack-referentie
   const C_base=(C_cal>0.1&&C_cal<1.0)?C_cal:0.61;
   // Gebruik geometrie-gecorrigeerde C en effectieve hoogte
   const C=C_base*geomCd_inlaat()*geomCd_uitlaat();
@@ -1387,7 +1539,7 @@ function computeLuchtaanzuiging() {
   // W_max: psychrometrisch correct — vochtopname langs isenthalpe lijn
   // dAH = AH_sat(T_in) - AH_in  [g/m³]  = hoeveel water de WARME lucht nog kan opnemen
   // Niet berekend op T_wb (dat geeft te lage waarde omdat T_wb < T_in)
-  const V_tot_est   = (vEst*At + ejectorV_m3h()/3600) * 3600;  // m³/h
+  const V_tot_est = computeVtotaal(vEst * At, At);  // venturi iteratief
   const AH_sat_in   = satH(Tin);                                 // g/m³ bij T_in
   const AH_in_act   = AH_sat_in * RVin / 100;                   // g/m³ werkelijk
   const dAH_inlaat  = AH_sat_in - AH_in_act;                    // g/m³ nog op te nemen
@@ -1404,14 +1556,14 @@ function computeLuchtaanzuiging() {
   let dT=Math.min(S.dT,dT_max);
   for(let i=0;i<30;i++){
     const v=C*Math.sqrt(2*g*H_eff*Math.max(0,dT)/Tk);
-    const m=v*At*1.15;
+    const m=v*At_inlaat*1.15;
     const d=Math.min(m>0?Qnut/(m*CP_AIR):0,dT_max);
     if(Math.abs(d-dT)<0.005){dT=d;break;}
     dT=dT*0.5+d*0.5;
   }
   dT=Math.max(0,Math.min(dT,dT_max));
   const vStack=dT>0.05?C*Math.sqrt(2*g*H_eff*dT/Tk):0;
-  const Vair_h=vStack*At*3600 + ejectorV_m3h();
+  const Vair_h = computeVtotaal(vStack * At, At);
   const Tout=Tin-dT;
   const vdIn=calcVD(Tin,RVin);
   const moistAdd=Vair_h>0?(wNut*eta)/Vair_h:0;
@@ -2587,6 +2739,8 @@ function initTabs() {
       document.querySelectorAll('.tp').forEach(p=>p.classList.remove('act'));
       btn.classList.add('act');
       document.getElementById('tab-'+btn.dataset.tab).classList.add('act');
+      // On-demand renderen van zware tabbladen
+      if (btn.dataset.tab==='validatie') { try { renderValidatie(); } catch(e){ console.warn(e); } }
     });
   });
 }
@@ -2606,7 +2760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildRingConfig();
   renderAll();
   refreshSliderValues();
-  renderValidatie();
+  // Validatie tabblad laden on-demand bij tab-click (performance)
 });
 </script>
 </body>
